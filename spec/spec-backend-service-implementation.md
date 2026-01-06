@@ -71,13 +71,20 @@ public class DeviceServiceImpl implements DeviceService {
 
 ```mermaid
 flowchart LR
-    a1(createDevice()) --> a2(validate input)
-    a2 --> a3(map DTO to Entity)
-    a3 --> a4(DAO.save())
-    a4 --> a5(map Entity to DTO)
-    a5 --> a6(Return DTO)
-    a4 -- Error --> a7(log and throw exception)
+    a1 --> a2
+    a2 --> a3
+    a3 --> a4
+    a4 --> a5
+    a5 --> a6
+    a4 -- Error --> a7
     a7 --> a6
+    a1[createDevice]
+    a2[validate input]
+    a3[map DTO to Entity]
+    a4[DAO.save]
+    a5[map Entity to DTO]
+    a6[Return DTO]
+    a7[log and throw exception]
 ```
 
 ### Device Retrieval Flow
