@@ -7,9 +7,10 @@ owner: ThingsBoard Architecture Team
 tags: [architecture, backend, service, implementation, java, spring, flowchart]
 ---
 
+
 # Introduction
 
-This expanded specification provides deeper technical guidance for backend service implementation in ThingsBoard, including lifecycle, error handling, transaction management, and visual flow charts for common service operations.
+This expanded specification provides comprehensive technical documentation for backend service implementation in ThingsBoard. It covers service lifecycle, error handling, transaction management, and includes visual flowcharts for key operations. The document details the architecture, core services, and features, focusing on structure and process without code examples or recommendations.
 
 ## 1. Purpose & Scope
 
@@ -33,88 +34,128 @@ Defines advanced backend service patterns, including request flow, error propaga
 - **CON-001**: No direct DB access from services; always use DAOs
 - **GUD-001**: Document service flows with diagrams for complex logic
 
+
 ## 4. Interfaces & Data Contracts
 
-Example service interface:
-```java
-public interface DeviceService {
-    DeviceDTO getDeviceById(UUID id);
-    List<DeviceDTO> listDevices(PageLink pageLink);
-    DeviceDTO createDevice(DeviceDTO device);
-    void deleteDevice(UUID id);
-}
-```
+All backend services expose well-defined interfaces for interaction with controllers, other services, and data access layers. Data contracts are established using DTOs (Data Transfer Objects) and entities, ensuring clear boundaries between layers. Each service interface defines the available operations, input/output structures, and error propagation mechanisms. Transactional boundaries are explicitly defined at the service layer to guarantee atomicity and consistency.
+## 5a. Core Services and Features
 
-Example implementation:
-```java
-@Service
-public class DeviceServiceImpl implements DeviceService {
-    private final DeviceDao deviceDao;
-    public DeviceServiceImpl(DeviceDao deviceDao) {
-        this.deviceDao = deviceDao;
-    }
-    @Transactional
-    public DeviceDTO createDevice(DeviceDTO device) {
-        // Validate input
-        // Map DTO to entity
-        // Persist via DAO
-        // Map entity to DTO
-        // Return result
-    }
-    // ...other methods...
-}
-```
+### Device Management Service
+Handles the full lifecycle of device entities, including creation, retrieval, update, and deletion. Integrates with data access objects for persistence and enforces validation, uniqueness, and transactional integrity.
 
-## 5. Service Operation Flowcharts
+### User Management Service
+Manages user accounts, authentication, authorization, and role assignments. Integrates with security modules and supports RBAC (Role-Based Access Control).
+
+### Asset Management Service
+Provides operations for asset entities, including hierarchical relationships, metadata management, and association with devices or users.
+
+### Telemetry Service
+Processes and stores time-series telemetry data from devices. Supports high-throughput ingestion, data validation, and integration with analytics modules.
+
+### Notification Service
+Delivers system and user notifications via multiple channels (email, SMS, in-app). Handles notification templates, delivery tracking, and error handling.
+
+### Integration Service
+Facilitates communication with external systems and platforms. Manages connectors, protocol adapters, and event-driven integration flows.
+
+### Rule Engine Service
+Executes business rules and automation logic. Processes incoming events, evaluates conditions, and triggers actions across the platform.
+
+### Audit and Logging Service
+Captures and stores audit events for all critical operations. Ensures traceability, compliance, and supports configurable retention policies.
+
+### Monitoring and Metrics Service
+Collects and exposes operational metrics, health checks, and performance indicators. Integrates with observability platforms for real-time monitoring.
+
+
+## 5b. Service Operation Flowcharts
 
 ### Device Creation Flow
 
 ```mermaid
 flowchart LR
-    a1 --> a2
-    a2 --> a3
-    a3 --> a4
-    a4 --> a5
-    a5 --> a6
-    a4 -- Error --> a7
-    a7 --> a6
-    a1[createDevice]
-    a2[validate input]
-    a3[map DTO to Entity]
-    a4[DAO.save]
-    a5[map Entity to DTO]
-    a6[Return DTO]
-    a7[log and throw exception]
+    a1[Start: createDevice request] --> a2[Validate input data]
+    a2 --> a3[Check for duplicate device]
+    a3 -- Exists --> a4[Abort and return error]
+    a3 -- Not Exists --> a5[Map DTO to Entity]
+    a5 --> a6[Persist entity via DAO]
+    a6 --> a7[Map Entity to DTO]
+    a7 --> a8[Return DTO to caller]
+    a6 -- Error --> a9[Log and throw exception]
+    a9 --> a8
 ```
 
 ### Device Retrieval Flow
 
 ```mermaid
 flowchart LR
-    b1 --> b2
-    b2 --> b3
-    b3 --> b4
-    b4 --> b5
-    b3 -- Not Found --> b6
-    b6 --> b5
-    b1[getDeviceById]
-    b2[validate ID]
-    b3[DAO.findById]
-    b4[map Entity to DTO]
-    b5[Return DTO]
-    b6[log and throw exception]
+    b1[Start: getDeviceById request] --> b2[Validate device ID]
+    b2 --> b3[Retrieve entity via DAO]
+    b3 -- Not Found --> b4[Log and return not found error]
+    b3 -- Found --> b5[Map Entity to DTO]
+    b5 --> b6[Return DTO to caller]
 ```
 
 ### Device Deletion Flow
 
 ```mermaid
 flowchart LR
-    A(Delete Device) --> B(Validate ID)
-    B --> C(Call DAO delete)
-    C --> D(Log deletion)
-    D --> E(Return success)
-    C -- Error --> F(Log and throw exception)
-    F --> E
+    c1[Start: deleteDevice request] --> c2[Validate device ID]
+    c2 --> c3[Delete entity via DAO]
+    c3 --> c4[Log deletion event]
+    c4 --> c5[Return success to caller]
+    c3 -- Error --> c6[Log and throw exception]
+    c6 --> c5
+```
+### User Creation Flow
+
+```mermaid
+flowchart LR
+    d1[Start: createUser request] --> d2[Validate input data]
+    d2 --> d3[Check for duplicate user]
+    d3 -- Exists --> d4[Abort and return error]
+    d3 -- Not Exists --> d5[Map DTO to Entity]
+    d5 --> d6[Persist entity via DAO]
+    d6 --> d7[Map Entity to DTO]
+    d7 --> d8[Return DTO to caller]
+    d6 -- Error --> d9[Log and throw exception]
+    d9 --> d8
+```
+### Telemetry Ingestion Flow
+
+```mermaid
+flowchart LR
+    e1[Start: telemetry received] --> e2[Validate payload]
+    e2 --> e3[Enqueue for processing]
+    e3 --> e4[Persist telemetry data]
+    e4 --> e5[Update device state]
+    e5 --> e6[Return success]
+    e4 -- Error --> e7[Log and throw exception]
+    e7 --> e6
+```
+### Notification Delivery Flow
+
+```mermaid
+flowchart LR
+    f1[Start: notification event] --> f2[Select delivery channel]
+    f2 --> f3[Format notification message]
+    f3 --> f4[Send notification]
+    f4 --> f5[Track delivery status]
+    f5 --> f6[Return delivery result]
+    f4 -- Error --> f7[Log and throw exception]
+    f7 --> f6
+```
+### Rule Engine Processing Flow
+
+```mermaid
+flowchart LR
+    g1[Start: event received] --> g2[Evaluate rule conditions]
+    g2 -- Match --> g3[Trigger actions]
+    g2 -- No Match --> g4[End processing]
+    g3 --> g5[Update system state]
+    g5 --> g4
+    g3 -- Error --> g6[Log and throw exception]
+    g6 --> g4
 ```
 ## 6. Error Handling & Transaction Management
 
@@ -214,22 +255,21 @@ public void deleteDevice(UUID id) { ... }
 ### Duplicate Device Creation
 ```mermaid
 flowchart LR
-    A[Create Device] --> B[Check if name exists]
-    B -- Exists --> C[Log warning]
-    C --> D[Throw Duplicate Exception]
-    B -- Not Exists --> E[Proceed with creation]
-    E --> F[Return result]
+    h1[Start: createDevice request] --> h2[Check if device name exists]
+    h2 -- Exists --> h3[Log warning and abort]
+    h2 -- Not Exists --> h4[Proceed with creation]
+    h4 --> h5[Return result]
 ```
 
 ### Bulk Device Deletion
 ```mermaid
 flowchart LR
-    A[Delete Devices] --> B[Iterate IDs]
-    B --> C[Call DAO delete for each]
-    C --> D[Log each deletion]
-    D --> E[Return summary to Controller]
-    C -- Error --> F[Log and collect error]
-    F --> E
+    i1[Start: bulk delete request] --> i2[Iterate device IDs]
+    i2 --> i3[Delete each device via DAO]
+    i3 --> i4[Log each deletion]
+    i4 --> i5[Return summary to caller]
+    i3 -- Error --> i6[Log and collect error]
+    i6 --> i5
 ```
 
 ## 15. Future Enhancements
