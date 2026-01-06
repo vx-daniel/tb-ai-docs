@@ -2,40 +2,63 @@
 
 This index links detailed, developer-focused specs explaining core modules and flows in the ThingsBoard codebase (server-side Java).
 
+## Rule Engine
+
 - [Rule Engine Core Interfaces](rule-engine-core-interfaces.md)
 - [TbContext & Services](tb-context-and-services.md)
 - [Messaging Model (TbMsg & Metadata)](tbmsg-and-metadata.md)
-- [Device RPC (Request/Response)](device-rpc.md)
-- [Transport → Rule Engine Flow](transport-to-rule-engine-flow.md)
-- [Rule Engine Services (RPC, Telemetry, Notifications)](rule-engine-services-rpc-telemetry-notifications.md)
-- [Device State Management](device-state-management.md)
-- [Rule Chain JSON Templates](rule-chain-json-templates.md)
-- [Timeseries & Attributes Requests](timeseries-and-attributes-requests.md)
-- [MQTT Transport Flow](mqtt-transport-flow.md)
 - [Rule Engine Queue & Actors](rule-engine-queue-and-actors.md)
-- [DAO & Entity Services Overview](dao-entity-services-overview.md)
+- [Rule Engine Services (RPC, Telemetry, Notifications)](rule-engine-services-rpc-telemetry-notifications.md)
+- [Rule Chain JSON Templates](rule-chain-json-templates.md)
 - [RuleNode UI Integration](rule-node-ui-integration.md)
-- [Actor Internals Deep Dive](actor-internals-deep-dive.md)
-- [Relations and Edge Sync](relations-and-edge-sync.md)
 - [Script Engine API](script-engine.md)
-- [Alarm Service](alarm-service.md)
-- [Security and Authentication](security-auth.md)
-- [Queue and Partitioning](queue-and-partitioning.md)
-- [Edge Integration](edge-integration.md)
+
+## Transport Layer
+
+- [Transport → Rule Engine Flow](transport-to-rule-engine-flow.md)
+- [MQTT Transport Flow](mqtt-transport-flow.md)
 - [HTTP Transport Flow](http-transport-flow.md)
 - [CoAP Transport Flow](coap-transport-flow.md)
-- [Notification Service](notification-service.md)
+
+## Device & Asset Management
+
+- [Device RPC (Request/Response)](device-rpc.md)
+- [Device State Management](device-state-management.md)
+- [Device and Asset Profiles](device-asset-profiles.md)
 - [OTA Updates](ota-updates.md)
-- [API Usage State](api-usage-state.md)
-- [WebSocket Subscriptions](websocket-subscriptions.md)
-- [Dashboard and Widgets](dashboard-widgets.md)
+- [Timeseries & Attributes Requests](timeseries-and-attributes-requests.md)
+
+## Data & Persistence
+
+- [DAO & Entity Services Overview](dao-entity-services-overview.md)
 - [Entity Query API](entity-query.md)
-- [Audit Logging](audit-logging.md)
-- [Tenant and Customer Model](tenant-customer-model.md)
+- [Relations and Edge Sync](relations-and-edge-sync.md)
+
+## Notifications & Messaging
+
+- [Notification Service](notification-service.md)
 - [Mail Service](mail-service.md)
 - [SMS Service](sms-service.md)
+- [Alarm Service](alarm-service.md)
+
+## Security & Multi-Tenancy
+
+- [Security and Authentication](security-auth.md)
+- [Tenant and Customer Model](tenant-customer-model.md)
+- [API Usage State](api-usage-state.md)
+- [Audit Logging](audit-logging.md)
+
+## UI & Real-Time
+
+- [Dashboard and Widgets](dashboard-widgets.md)
+- [WebSocket Subscriptions](websocket-subscriptions.md)
+
+## Infrastructure
+
+- [Actor Internals Deep Dive](actor-internals-deep-dive.md)
+- [Queue and Partitioning](queue-and-partitioning.md)
 - [Job Manager](job-manager.md)
-- [Device and Asset Profiles](device-asset-profiles.md)
+- [Edge Integration](edge-integration.md)
 
 ## Labs (Hands-on)
 
