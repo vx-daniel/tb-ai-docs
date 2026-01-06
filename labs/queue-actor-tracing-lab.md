@@ -38,12 +38,24 @@ Trace a single message from producer → queue partition → consumer → App/Te
 
 ## Example Outputs
 
+### Suggested Logger Categories
+
+- org.thingsboard.server.queue.common.TbRuleEngineProducerService
+- org.thingsboard.server.service.queue.ruleengine
+- org.thingsboard.server.actors.app
+- org.thingsboard.server.actors.ruleChain
+
+### Sample Log Excerpts
+
 - Producer:
-  - "resolveAll partitions" and message cloned with shared correlationId
+  - "resolveAll partitions for tenant=... partitions=[...]"
+  - "Cloning TbMsg for partition=... correlationId=... id=..."
 - Consumer:
-  - `QueueToRuleEngineMsg` created with tenantId and relationTypes
+  - "Polled ToRuleEngineMsg partition=... size=1"
+  - "Created QueueToRuleEngineMsg tenant=... relationTypes=null"
 - Actor:
-  - `Pushing message to single target: [RULE_NODE ...]` or `Pushing message to multiple targets`
+  - "Pushing message to single target: [RULE_NODE {nodeId}]"
+  - "putToQueue -> new TbMsg id={uuid} ruleChainId={ruleChainId}"
 
 ## References
 

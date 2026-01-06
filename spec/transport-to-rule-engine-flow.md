@@ -1,13 +1,16 @@
 # Transport → Rule Engine Flow
 
 ## Language & Context
+
 - Language: Java (server-side)
 - Domain: How inbound telemetry/attributes from transports become `TbMsg` and enter the Rule Engine.
 
 Key source file (example path):
+
 - common/transport/transport-api/src/main/java/org/thingsboard/server/common/transport/service/DefaultTransportService.java
 
 ## High-Level Flow
+
 ```mermaid
 sequenceDiagram
   participant Transport as Transport Handler (MQTT/HTTP/CoAP)
@@ -20,6 +23,7 @@ sequenceDiagram
 ```
 
 ## Key Steps in DefaultTransportService
+
 - Validate limits per session and message (`checkLimits`)
 - Record device activity (`recordActivityInternal`)
 - Prepare identifiers: `TenantId`, `DeviceId`, `CustomerId`
@@ -29,7 +33,9 @@ sequenceDiagram
 - Use pack/aggregate callbacks for multi-point telemetry bursts
 
 ## Telemetry Example
+
 Selected flow from `process(SessionInfoProto, PostTelemetryMsg, TbMsgMetaData?, TransportServiceCallback)`:
+
 - Iterate `tsKvList` and count points (for rate limiting)
 - For each `tsKv`, copy or create `TbMsgMetaData`
 - Inject `deviceName`, `deviceType`, and `ts`
@@ -42,21 +48,25 @@ flowchart TD
   B -->|OK| C[recordActivityInternal]
   C --> D[build TenantId/DeviceId/CustomerId]
   D --> E[for each tsKv: build meta & JSON]
-  E --> F[sendToRuleEngine(..., TbMsgType.POST_TELEMETRY_REQUEST)]
+  E --> F[sendToRuleEngine - POST_TELEMETRY_REQUEST]
 ```
 
 ## Attributes Example
+
 - Similar to telemetry; may set `scope` to `SHARED_SCOPE` in metadata
 - Builds `TbMsgType.POST_ATTRIBUTES_REQUEST`
 
 ## Best Practices
+
 - Reuse a base `TbMsgMetaData` per session where possible but call `copy()` per data point to avoid cross-contamination.
 - Enforce fair usage via `checkLimits` to protect cluster stability.
 - Maintain consistent JSON schema for downstream nodes.
 
 ## Common Pitfalls
+
 - Forgetting to copy metadata when looping over `tsKvList`.
 - Not setting `NOTIFY_DEVICE_METADATA_KEY` appropriately for attributes.
 
 ## References
+
 - common/transport/transport-api/src/main/java/org/thingsboard/server/common/transport/service/DefaultTransportService.java
