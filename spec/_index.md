@@ -10,3 +10,8 @@ This index links detailed, developer-focused specs explaining core modules and f
 - Rule Engine Services (RPC, Telemetry, Notifications): spec/rule-engine-services-rpc-telemetry-notifications.md
 - Device State Management: spec/device-state-management.md
 - Rule Chain JSON Templates: spec/rule-chain-json-templates.md
+ - Timeseries & Attributes Requests: spec/timeseries-and-attributes-requests.md
+ - MQTT Transport Flow: spec/mqtt-transport-flow.md
+- Rule Engine Queue & Actors: spec/rule-engine-queue-and-actors.md
+- DAO & Entity Services Overview: spec/dao-entity-services-overview.md
+- RuleNode UI Integration: spec/rule-node-ui-integration.md
