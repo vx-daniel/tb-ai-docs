@@ -32,6 +32,10 @@ This index links detailed, developer-focused specs explaining core modules and f
 - [Entity Query API](entity-query.md)
 - [Audit Logging](audit-logging.md)
 - [Tenant and Customer Model](tenant-customer-model.md)
+- [Mail Service](mail-service.md)
+- [SMS Service](sms-service.md)
+- [Job Manager](job-manager.md)
+- [Device and Asset Profiles](device-asset-profiles.md)
 
 ## Labs (Hands-on)
 
