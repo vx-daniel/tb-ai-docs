@@ -35,7 +35,7 @@ flowchart TD
   A[QueueToRuleEngineMsg] --> B[checkMsgValid]
   B --> C[checkComponentStateActive]
   C --> D[if relationTypes null → firstNode]
-  D --> E[pushMsgToNode(firstNode)]
+  D --> E["pushMsgToNode(firstNode)"]
   C --> F[else onTellNext]
   F --> G[filter outbound relations by relationTypes]
   G --> H{count}

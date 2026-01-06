@@ -44,11 +44,11 @@ Selected flow from `process(SessionInfoProto, PostTelemetryMsg, TbMsgMetaData?, 
 
 ```mermaid
 flowchart TD
-  A[PostTelemetryMsg] --> B{checkLimits}
-  B -->|OK| C[recordActivityInternal]
-  C --> D[build TenantId/DeviceId/CustomerId]
-  D --> E[for each tsKv: build meta & JSON]
-  E --> F[sendToRuleEngine - POST_TELEMETRY_REQUEST]
+  A["PostTelemetryMsg"] --> B{"checkLimits"}
+  B -->|OK| C["recordActivityInternal"]
+  C --> D["build TenantId/DeviceId/CustomerId"]
+  D --> E["for each tsKv: build meta & JSON"]
+  E --> F["sendToRuleEngine - POST_TELEMETRY_REQUEST"]
 ```
 
 ## Attributes Example
