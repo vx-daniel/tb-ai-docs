@@ -8,9 +8,11 @@ Comprehensive technical specifications for the ThingsBoard IoT platform, organiz
 
 High-level architectural patterns, design principles, and system blueprints.
 
-- [Architecture Blueprint](architecture-blueprint.md) - System architecture, patterns, and design principles
-- [Backend Service Design](backend-service-design.md) - Service domains, responsibilities, and patterns
-- [Technology Stack](technology-stack.md) - Languages, frameworks, and infrastructure dependencies
+| Document | Description |
+|----------|-------------|
+| [Architecture Blueprint](architecture-blueprint.md) | System architecture, module structure, patterns, and cross-cutting concerns |
+| [Infrastructure & Queue](infrastructure-queue.md) | Queue backends, partitioning, technology stack, and high availability |
+| [Testing & CI/CD](testing-cicd.md) | Test strategies, frameworks, pipelines, and quality gates |
 
 ---
 
@@ -18,11 +20,11 @@ High-level architectural patterns, design principles, and system blueprints.
 
 Core rule engine interfaces, messaging, and node implementation.
 
-- [Rule Engine Core](rule-engine-core.md) - TbNode, TbContext, TbMsg interfaces and lifecycle
-- [Rule Node Implementation Guide](rule-node-implementation-guide.md) - How to implement custom rule nodes
-- [Rule Node Inventory](rule-node-inventory.md) - Complete catalog of available rule nodes
-- [Rule Chain Templates](rule-chain-templates.md) - JSON templates and patterns for rule chains
-- [Script Engine](script-engine.md) - TBEL and JavaScript scripting APIs
+| Document | Description |
+|----------|-------------|
+| [Rule Engine Core](rule-engine-core.md) | TbNode, TbContext, TbMsg, TbMsgMetaData interfaces and lifecycle |
+| [Rule Node Implementation Guide](rule-node-implementation-guide.md) | How to implement custom rule nodes with examples |
+| [Script Engine](script-engine.md) | TBEL and JavaScript scripting APIs, built-in functions, and examples |
 
 ---
 
@@ -30,10 +32,9 @@ Core rule engine interfaces, messaging, and node implementation.
 
 Device communication protocols and transport-to-rule-engine flow.
 
-- [Transport Overview](transport-overview.md) - Transport layer architecture and common patterns
-- [MQTT Transport](mqtt-transport.md) - MQTT protocol implementation and topics
-- [HTTP Transport](http-transport.md) - HTTP REST API for devices
-- [CoAP Transport](coap-transport.md) - CoAP protocol for constrained devices
+| Document | Description |
+|----------|-------------|
+| [Transport Layer](transport-layer.md) | MQTT, HTTP, CoAP protocols, session management, and rate limiting |
 
 ---
 
@@ -41,32 +42,19 @@ Device communication protocols and transport-to-rule-engine flow.
 
 Device lifecycle, profiles, RPC, and state management.
 
-- [Device & Asset Profiles](device-asset-profiles.md) - Profile configuration and provisioning
-- [Device RPC](device-rpc.md) - Server-side and client-side RPC implementation
-- [Device State Management](device-state-management.md) - Connectivity and activity tracking
-- [OTA Updates](ota-updates.md) - Firmware and software update mechanisms
-- [Timeseries & Attributes](timeseries-attributes.md) - Data storage and retrieval APIs
+| Document | Description |
+|----------|-------------|
+| [Device & Asset Management](device-asset-management.md) | Profiles, lifecycle, RPC, credentials, provisioning, and relations |
 
 ---
 
-## Data & Persistence
+## Notifications & Alarms
 
-Data access layer, entity services, and caching.
+Alarm lifecycle, notification channels, and delivery.
 
-- [DAO & Entity Services](dao-entity-services.md) - Data access patterns and entity management
-- [Entity Query API](entity-query.md) - Flexible entity querying and filtering
-- [Caching Strategies](caching-strategies.md) - Entity and profile caching
-
----
-
-## Notifications & Messaging
-
-Notification channels, templates, and delivery.
-
-- [Notification Service](notification-service.md) - Notification center and delivery channels
-- [Mail Service](mail-service.md) - Email sending and templates
-- [SMS Service](sms-service.md) - SMS providers and configuration
-- [Alarm Service](alarm-service.md) - Alarm creation, propagation, and querying
+| Document | Description |
+|----------|-------------|
+| [Alarm & Notification Services](alarm-notification-services.md) | Alarm rules, propagation, notification templates, and channels |
 
 ---
 
@@ -74,10 +62,9 @@ Notification channels, templates, and delivery.
 
 Authentication, authorization, and tenant isolation.
 
-- [Security & Authentication](security-auth.md) - JWT, OAuth2, MFA, and device auth
-- [Tenant & Customer Model](tenant-customer-model.md) - Multi-tenancy and customer hierarchy
-- [API Usage & Rate Limiting](api-usage-state.md) - Usage tracking and rate limits
-- [Audit Logging](audit-logging.md) - Action tracking and compliance
+| Document | Description |
+|----------|-------------|
+| [Security & Authentication](security-auth.md) | JWT, OAuth2, MFA, device auth, RBAC, and rate limiting |
 
 ---
 
@@ -85,19 +72,37 @@ Authentication, authorization, and tenant isolation.
 
 Frontend patterns and real-time data delivery.
 
-- [Angular UI Patterns](angular-ui-patterns.md) - Component, service, and state management patterns
-- [Dashboard & Widgets](dashboard-widgets.md) - Widget development and data binding
-- [WebSocket Subscriptions](websocket-subscriptions.md) - Real-time data subscriptions
+| Document | Description |
+|----------|-------------|
+| [UI & Real-Time](ui-realtime.md) | Dashboards, widgets, WebSocket subscriptions, and real-time updates |
 
 ---
 
-## Infrastructure & Operations
+## Document Summary
 
-Actors, queues, monitoring, and deployment.
+| File | Topics Covered |
+|------|----------------|
+| [architecture-blueprint.md](architecture-blueprint.md) | Modules, layers, patterns, extension points, deployment |
+| [rule-engine-core.md](rule-engine-core.md) | TbNode, TbContext, TbMsg, message types, metadata, services |
+| [rule-node-implementation-guide.md](rule-node-implementation-guide.md) | Node lifecycle, configuration, routing, async, testing |
+| [script-engine.md](script-engine.md) | TBEL, JavaScript, filter/transform/switch scripts |
+| [transport-layer.md](transport-layer.md) | MQTT, HTTP, CoAP, session management, authentication |
+| [device-asset-management.md](device-asset-management.md) | Profiles, RPC, state, credentials, provisioning |
+| [alarm-notification-services.md](alarm-notification-services.md) | Alarms, notifications, templates, channels |
+| [security-auth.md](security-auth.md) | JWT, OAuth2, MFA, device auth, permissions |
+| [ui-realtime.md](ui-realtime.md) | Dashboards, widgets, WebSocket subscriptions |
+| [infrastructure-queue.md](infrastructure-queue.md) | Kafka, partitioning, DLQ, HA, monitoring |
+| [testing-cicd.md](testing-cicd.md) | Unit/integration/E2E tests, CI/CD, quality gates |
 
-- [Actor System](actor-system.md) - Akka actors, mailboxes, and processing
-- [Queue & Partitioning](queue-partitioning.md) - Message queues and partition strategies
-- [Job Manager](job-manager.md) - Scheduled and recurring jobs
+---
+
+## Source Specification Directories
+
+These merged specifications consolidate content from:
+
+- `spec_1/` - Rule Engine API interface specifications
+- `spec_2/` - Architecture, design, process, and infrastructure specifications
+- `spec_3/` - Domain-specific specifications (transport, device, notification, security)
 - [Edge Integration](edge-integration.md) - ThingsBoard Edge synchronization
 - [Monitoring & Observability](monitoring-observability.md) - Logging, metrics, and tracing
 
