@@ -231,8 +231,8 @@ Use `copy()` for simple modifications; use `transform()` to maintain context saf
 
 ```mermaid
 flowchart TD
-  A[Original TbMsg] --> B[copy(): change data/meta]
-  A --> C[transform(): safe context changes]
+  A[Original TbMsg] --> B["copy(): change data/meta"]
+  A --> C["transform(): safe context changes"]
   C --> D[ruleChainId changed → reset ruleNodeId]
   C --> E[preserve internal ctx where appropriate]
 ```
