@@ -211,12 +211,12 @@ flowchart TD
 
 ### Bulk Device Deletion
 ```mermaid
-flowchart TD
-    A[Service: deleteDevices(List<UUID>)] --> B[Iterate IDs]
-    B --> C[Call DAO.delete() for each]
+flowchart LR
+    A[Delete Devices] --> B[Iterate IDs]
+    B --> C[Call DAO delete for each]
     C --> D[Log each deletion]
     D --> E[Return summary to Controller]
-    C -->|Error| F[Log and collect error]
+    C -- Error --> F[Log and collect error]
     F --> E
 ```
 

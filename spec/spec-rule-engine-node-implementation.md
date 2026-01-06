@@ -315,3 +315,85 @@ public class TbAdvancedRestNode implements TbNode {
     public void destroy() { /* Cleanup resources */ }
 }
 ```
+
+## 20. Core Services and Features in Rule Engine Nodes
+
+This section details the core services and features available to rule engine nodes, their interactions, and technical implementation, illustrated with GitHub-compatible flowcharts.
+
+### 20.1 Core Services Overview
+- **Node Registry Service:** Manages registration, lookup, and lifecycle of all rule nodes.
+- **Context Service:** Provides access to platform services, configuration, and message routing.
+- **Telemetry Service:** Handles collection and forwarding of telemetry and timeseries data.
+- **Alarm Service:** Manages alarm creation, state transitions, and notifications.
+- **Integration Service:** Facilitates communication with external systems and APIs.
+- **Cache Service:** Provides in-memory caching for node state and frequently accessed data.
+- **Audit Service:** Tracks node actions and message flows for compliance and debugging.
+
+### 20.2 Node Lifecycle Flowchart
+```mermaid
+flowchart LR
+    A[Node Instantiated] --> B[init(TbContext, TbNodeConfiguration)]
+    B --> C[Validate and parse configuration]
+    C --> D[Register with Node Registry]
+    D --> E[Ready to process messages]
+    E --> F[onMsg(TbContext, TbMsg)]
+    F --> G[Process message logic]
+    G --> H[ctx.tellSuccess or ctx.tellFailure]
+    H --> I[Node continues or terminates]
+    I --> J[destroy() on shutdown]
+```
+
+### 20.3 Message Processing Flowchart
+```mermaid
+flowchart LR
+    A[onMsg() called] --> B[Validate TbMsg]
+    B --> C[Check node config/state]
+    C --> D[Perform main processing logic]
+    D --> E[Call external service (optional)]
+    E --> F[Process response]
+    F --> G[Update state/context (if needed)]
+    G --> H[ctx.tellSuccess or ctx.tellFailure]
+    D -- Error --> I[Catch, log, and handle error]
+    I --> H
+```
+
+### 20.4 Telemetry Data Flowchart
+```mermaid
+flowchart LR
+    A[Device Data Received] --> B[Transport Module]
+    B --> C[Rule Engine Node]
+    C --> D[Telemetry Service]
+    D --> E[Database]
+    D --> F[Cache Service]
+    F --> G[Rule Engine Node]
+```
+
+### 20.5 Alarm Handling Flowchart
+```mermaid
+flowchart LR
+    A[Rule Engine Node triggers alarm] --> B[Alarm Service: create alarm]
+    B --> C[Alarm Service: evaluate state]
+    C --> D[Alarm Service: notify user/integration]
+    D --> E[User acknowledges alarm]
+    E --> F[Alarm Service: update state]
+    F --> G[Audit Service]
+```
+
+### 20.6 Integration Node Communication Flowchart
+```mermaid
+flowchart LR
+    A[Rule Engine Node] --> B[Integration Service]
+    B --> C[External System]
+    C --> D[Integration Service]
+    D --> E[Rule Engine Node]
+```
+
+### 20.7 In-Depth Technical Implementation
+- All core services are accessed via the context object, ensuring decoupling and testability.
+- Node lifecycle is managed by the registry, with hooks for initialization, message processing, and shutdown.
+- Telemetry and alarm services are integrated for real-time monitoring and alerting.
+- Integration service supports both synchronous and asynchronous communication with external systems.
+- Cache and audit services provide performance optimization and traceability for node operations.
+- All flowcharts use left-to-right (LR) orientation and explicit edge labels for GitHub compatibility.
+
+---
