@@ -459,7 +459,7 @@ This section provides additional technical depth for implementing the core archi
 
 ### 28.1 Platform Data Flow Overview
 ```mermaid
-flowchart TD
+flowchart LR
     A[Device] --> B[Transport Module]
     B --> C[Rule Engine]
     C --> D[DAO]
@@ -474,7 +474,7 @@ flowchart TD
 
 ### 28.2 Rule Engine Node Lifecycle Flowchart
 ```mermaid
-flowchart TD
+flowchart LR
     A[Node Instantiated] --> B[init(TbContext, TbNodeConfiguration)]
     B --> C[Validate and parse configuration]
     C --> D[Register with Node Registry]
@@ -488,78 +488,32 @@ flowchart TD
 
 ### 28.3 Data Access & Caching Flowchart
 ```mermaid
-flowchart TD
+flowchart LR
     A[Service: request entity] --> B[Check cache for entity]
-    B -->|Hit| C[Return entity from cache]
-    B -->|Miss| D[DAO: query database]
+    B -- Hit --> C[Return entity from cache]
+    B -- Miss --> D[DAO: query database]
     D --> E[Update cache with entity]
     E --> F[Return entity to service]
-    D -->|Error| G[Log and handle DB error]
+    D -- Error --> G[Log and handle DB error]
     G --> F
 ```
 
 ### 28.4 Integration Service Flowchart
 ```mermaid
-flowchart TD
+flowchart LR
     A[External System: POST /api/external/sync] --> B[Controller: validate request]
     B --> C[IntegrationService: map DTO]
     C --> D[IntegrationService: call external API]
     D --> E[IntegrationService: process response]
     E --> F[IntegrationService: persist/update data]
     F --> G[Return success to Controller]
-    D -->|Error| H[IntegrationService: log and handle error]
+    D -- Error --> H[IntegrationService: log and handle error]
     H --> G
 ```
 
-### 28.5 In-Depth Technical Implementation
-
-- **Transport Module:**
-  - Implements protocol handlers for MQTT, HTTP, CoAP, LwM2M, SNMP.
-  - Uses Protobuf schemas for efficient message serialization.
-  - Manages device sessions and authentication.
-
-- **Rule Engine:**
-  - Modular node architecture; nodes implement `TbNode` and are registered via `@RuleNode`.
-  - Event-driven processing; nodes communicate via `TbContext` and `TbMsg`.
-  - Supports async flows and error handling; all messages must be acknowledged.
-
-- **DAO & Data Access:**
-  - Async DAOs using `CompletableFuture` or `ListenableFuture`.
-  - Implements cache-aside pattern with Caffeine/Guava for performance.
-  - All DB exceptions are mapped to domain-specific errors.
-
-- **Integration Service:**
-  - Exposes REST/gRPC endpoints for external systems.
-  - Uses DTOs for contracts; validates and sanitizes all inputs.
-  - Communicates with external APIs using WebClient/gRPC stubs.
-  - Supports async processing and error handling (retry, circuit breaker).
-
-- **UI (Angular):**
-  - Modular NgModules, RxJS for state and async flows.
-  - Service/component separation, DI via Angular.
-  - Communicates with backend via REST APIs; handles errors and state updates.
-
-- **Error Handling & Observability:**
-  - Centralized error handling in controllers/services/nodes.
-  - SLF4J/logback for backend logging; Angular logging for UI.
-  - Prometheus/Grafana for metrics; distributed tracing via OpenTelemetry.
-
-- **Security:**
-  - Spring Security for backend, JWT for UI.
-  - Secure credentials and secrets management.
-  - TLS for all external communication.
-
-- **Testing & CI/CD:**
-  - Unit, integration, and E2E tests for all modules.
-  - Automated pipelines in GitHub Actions/Jenkins; coverage and quality gates.
-
----
-
-# 29. Advanced Module Interactions & Edge Cases
-
 ### 29.1 Module Interaction Flowchart
 ```mermaid
-flowchart TD
+flowchart LR
     A[UI (Angular)] --> B[REST API]
     B --> C[Service Layer]
     C --> D[DAO]
@@ -572,76 +526,45 @@ flowchart TD
     J --> C
 ```
 
-### 29.2 Edge Case Handling
-- **Unacknowledged Rule Engine Message:**
-  - If a node fails to call `ctx.tellSuccess` or `ctx.tellFailure`, the rule chain is blocked.
-  - Mitigation: Enforce message acknowledgment in all node implementations; monitor for stuck chains.
-
-- **Stale Cache Data:**
-  - If cache invalidation is missed after entity update/delete, stale data may be served.
-  - Mitigation: Explicitly invalidate cache on all write operations; monitor cache hit/miss rates.
-
-- **Integration API Version Mismatch:**
-  - If an external system changes its API, integration may fail.
-  - Mitigation: Use adapter/anti-corruption layer; version all APIs; monitor integration errors.
-
-- **Database Connection Pool Exhaustion:**
-  - High load may exhaust DB connections, causing failures.
-  - Mitigation: Tune connection pool size; implement backpressure and retry logic.
-
-- **Circular Dependency Between Modules:**
-  - Circular dependencies can cause runtime errors and maintenance issues.
-  - Mitigation: Enforce module boundaries; use interfaces and dependency inversion.
-
-### 29.3 In-Depth Technical Implementation: Edge Case Examples
-
-- **Rule Engine Node Example:**
-```java
-public void onMsg(TbContext ctx, TbMsg msg) {
-    try {
-        // Process message
-        ctx.tellSuccess(msg);
-    } catch (Exception e) {
-        ctx.tellFailure(msg, new TbNodeException(e));
-    }
-}
+### 30.2 Core Service Interaction Flowchart
+```mermaid
+flowchart LR
+    A[Device] --> B[Transport Service]
+    B --> C[Rule Engine Service]
+    C --> D[Telemetry & Timeseries Service]
+    C --> E[Alarm & Notification Service]
+    C --> F[Integration Service]
+    D --> G[Dashboard & Visualization Service]
+    E --> H[User & Tenant Management Service]
+    F --> I[External System]
+    H --> J[API Gateway]
+    G --> J
+    J --> K[UI (Angular)]
 ```
 
-- **Cache Invalidation Example:**
-```java
-public void updateDevice(Device device) {
-    deviceDao.saveAsync(device);
-    deviceCache.invalidate(device.getId());
-}
+### 30.4 Feature Flowchart: Device Data Processing
+```mermaid
+flowchart LR
+    A[Device sends data] --> B[Transport Service]
+    B --> C[Rule Engine Service]
+    C --> D[Telemetry & Timeseries Service]
+    C --> E[Alarm & Notification Service]
+    C --> F[Integration Service]
+    D --> G[Dashboard & Visualization Service]
+    E --> H[Notification Channel]
+    F --> I[External System]
+    G --> J[User Interface]
 ```
 
-- **Integration Adapter Example:**
-```java
-public class ExternalApiAdapter {
-    public ApiResponse callExternal(ApiRequest req) {
-        try {
-            // Map request, call external API
-            // Handle response and errors
-        } catch (ExternalApiException e) {
-            // Log and map error
-        }
-    }
-}
-```
-
-- **Connection Pool Tuning Example:**
-```properties
-spring.datasource.hikari.maximum-pool-size=50
-spring.datasource.hikari.minimum-idle=10
-```
-
-- **Module Boundary Enforcement Example:**
-```java
-// Service depends on DAO interface, not implementation
-public class DeviceService {
-    private final DeviceDao deviceDao;
-    public DeviceService(DeviceDao deviceDao) { this.deviceDao = deviceDao; }
-}
+### 30.5 Feature Flowchart: Alarm Lifecycle
+```mermaid
+flowchart LR
+    A[Rule Engine triggers alarm] --> B[Alarm Service: create alarm]
+    B --> C[Alarm Service: evaluate state]
+    C --> D[Alarm Service: notify user/integration]
+    D --> E[User acknowledges alarm]
+    E --> F[Alarm Service: update state]
+    F --> G[Dashboard updates]
 ```
 
 ---
