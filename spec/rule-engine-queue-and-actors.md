@@ -39,8 +39,8 @@ sequenceDiagram
 flowchart TD
   A[TbMsg] --> B[resolveAll partitions]
   B -->|N>1| C[Loop partitions]
-  C --> D[transform(): id/correlationId/partition]
-  D --> E[send(partition i)]
+  C --> D["transform(): id/correlationId/partition"]
+  D --> E["send(partition i)"]
 ```
 
 ## Actor Envelope: QueueToRuleEngineMsg
@@ -75,11 +75,11 @@ This is how the Rule Chain actor decides where to send a message after a node ca
 
 ```mermaid
 flowchart TD
-  S[onTellNext(msg, originNode, relationTypes)] --> V{Node routes exist?}
+  S["onTellNext(msg, originNode, relationTypes)"] --> V{Node routes exist?}
   V -- no --> NREL[No outbound relations]
   NREL --> CBF{Contains FAILURE?}
-  CBF -- yes --> FAIL[callback.onFailure(exception)]
-  CBF -- no --> SUCC[callback.onSuccess()]
+  CBF -- yes --> FAIL["callback.onFailure(exception)"]
+  CBF -- no --> SUCC["callback.onSuccess()"]
   V -- yes --> FLT[Filter relations by relationTypes]
   FLT --> CNT{Count}
   CNT -- 1 --> ONE[pushToTarget]
@@ -87,7 +87,7 @@ flowchart TD
   TPI -- yes --> RN{Target type}
   RN -- RULE_NODE --> PUSHNODE[pushMsgToNode]
   RN -- RULE_CHAIN --> RCRC[RuleChainToRuleChainMsg]
-  TPI -- no --> PUTQ[putToQueue(newMsg per target)]
+  TPI -- no --> PUTQ["putToQueue(newMsg per target)"]
   CNT -- >1 --> MULTI[Multiple targets]
   MULTI --> WRAP[MultipleTbQueueTbMsgCallbackWrapper]
   WRAP --> PUTQ
@@ -103,6 +103,22 @@ Practical outcome:
 - Single matching relation within same partition delivers directly to the target node
 - Multiple relations wrap callbacks and fan-out via queue
 - No matching relations resolves to success or failure callback depending on requested relation types
+
+## Logging & Tracing Cheatsheet
+
+- Enable DEBUG for:
+  - org.thingsboard.server.queue.common
+  - org.thingsboard.server.service.queue.ruleengine
+  - org.thingsboard.server.actors.app
+  - org.thingsboard.server.actors.ruleChain
+- MDC keys to include in logs for end-to-end tracing:
+  - correlationId, queueName, partition, tenantId, ruleChainId, ruleNodeId, msgId
+- Useful grep filters (adjust to your log location):
+
+```bash
+grep -E "correlationId|partition|putToQueue|pushMsgToNode|onTellNext" server.log
+grep -E "QueueToRuleEngineMsg|ToRuleEngineMsg" server.log
+```
 
 ## Hands-on: Trace This Flow
 

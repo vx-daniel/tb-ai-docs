@@ -120,6 +120,26 @@ flowchart TD
 - Forgetting to supply callbacks in tight loops; use `future(SettableFuture)` when batching
 - Saving attributes without `notifyDevice` when device-side sync is needed
 
+## Troubleshooting & Ops
+
+- Writes missing from latest:
+  - Check `Strategy` (e.g., `WS_ONLY` will not persist to raw/latest).
+  - Confirm keys and types match expected schema and no transform drops.
+- No device notifications:
+  - Ensure `notifyDevice` is true and `NOTIFY_DEVICE_METADATA_KEY` set appropriately.
+- Deletes not applied:
+  - Prefer `DeleteTsKvQuery` for targeted history deletes; verify query ranges.
+- Callback issues:
+  - Attach `future(SettableFuture)` when batching to collect outcomes.
+
+## Hands-on
+
+- See: ../labs/telemetry-attributes-lab.md
+
+---
+
+Previous: tb-context-and-services.md · Next: rule-engine-services-rpc-telemetry-notifications.md
+
 ## References
 
 - org/thingsboard/rule/engine/api/TimeseriesSaveRequest.java
