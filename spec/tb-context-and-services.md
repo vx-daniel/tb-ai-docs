@@ -94,6 +94,22 @@ graph TD
 - Creating messages with string `type`: use enum `TbMsgType` to avoid mismatches.
 - Forgetting `ack` when managing message packs or external node acks.
 
+## Troubleshooting & Ops
+
+- Unexpected route:
+  - Print relation types passed to `tellNext` and verify against configured UI labels.
+  - Ensure enum `TbMsgType` aligns with node expectations.
+- Lost retries:
+  - `tellSelf` is non-persistent; use queued re-delivery for critical retries.
+- Slow nodes:
+  - Offload blocking I/O to executors; monitor thread pools via metrics.
+- State drift:
+  - Validate usage of `saveRuleNodeState` and retrieval via `findRuleNodeStates(PageLink)`.
+
+---
+
+Previous: rule-engine-queue-and-actors.md · Next: timeseries-and-attributes-requests.md
+
 ## Quick Reference (selected)
 
 - Routing: `tellSuccess`, `tellNext`, `tellFailure`, `input`, `output`

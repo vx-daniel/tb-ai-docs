@@ -67,6 +67,23 @@ flowchart TD
 - Forgetting to copy metadata when looping over `tsKvList`.
 - Not setting `NOTIFY_DEVICE_METADATA_KEY` appropriately for attributes.
 
+## Troubleshooting & Ops
+
+- Rate limit rejections:
+  - Inspect `checkLimits` counters and thresholds; confirm session-scoped vs global limits.
+  - Verify the number of points in `tsKvList` matches expectations.
+- Missing metadata fields:
+  - Confirm per-point `meta.copy()` before injecting `ts` and device fields.
+  - Check transport-specific injectors (e.g., MQTT topic in `MqttTransportHandler`).
+- Wrong `TbMsgType`:
+  - Ensure telemetry uses `POST_TELEMETRY_REQUEST` and attributes use `POST_ATTRIBUTES_REQUEST`.
+- Pack callback timeouts:
+  - Validate downstream callbacks aggregate properly; check Rule Engine queue health.
+
+---
+
+Previous: mqtt-transport-flow.md · Next: tbmsg-and-metadata.md
+
 ## References
 
 - common/transport/transport-api/src/main/java/org/thingsboard/server/common/transport/service/DefaultTransportService.java

@@ -116,6 +116,21 @@ Walk through a real message across producer → queue → actors and observe `on
 - Use `correlationId` for multi-partition tracing
 - Ensure `callback` is present when upstream expects delivery acks (e.g., transport pack)
 
+## Troubleshooting & Ops
+
+- Stalled delivery:
+  - Check actor logs for `onTellNext` and callback outcomes; verify `isTellNext()` and relationTypes.
+  - Confirm partition ownership; remote paths use `putToQueue` to forward to owning partitions.
+- Fan-out not matching expectations:
+  - Compare requested relationTypes to configured route labels (case-insensitive).
+  - Inspect `nodeRoutes` size in logs to confirm available outbound relations.
+- Missing callbacks:
+  - Ensure `QueueToRuleEngineMsg` isn’t failing due to actor stop; check app/tenant actor lifecycle logs.
+  - For multiple targets, remember success waits for all downstream paths.
+- Tracing:
+  - Log `id`, `correlationId`, `partition`, `ruleChainId`, and `ruleNodeId` across components.
+  - Enable debug for `org.thingsboard.server.actors.ruleChain`, `org.thingsboard.server.queue.common`, and consumer manager packages.
+
 ## References
 
 - common/queue/src/main/java/org/thingsboard/server/queue/common/TbRuleEngineProducerService.java
