@@ -71,12 +71,12 @@ public class DeviceServiceImpl implements DeviceService {
 
 ```mermaid
 flowchart LR
-    A[createDevice()] --> B[validate input]
-    B --> C[map DTO to Entity]
-    C --> D[DAO.save()]
-    D --> E[map Entity to DTO]
-    E --> F[Return DTO]
-    D -- Error --> G[log and throw exception]
+    A(createDevice()) --> B(validate input)
+    B --> C(map DTO to Entity)
+    C --> D(DAO.save())
+    D --> E(map Entity to DTO)
+    E --> F(Return DTO)
+    D -- Error --> G(log and throw exception)
     G --> F
 ```
 
@@ -84,24 +84,23 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[getDeviceById()] --> B[validate ID]
-    B --> C[DAO.findById()]
-    C --> D[map Entity to DTO]
-    D --> E[Return DTO]
-    C -- Not Found --> F[log and throw exception]
+    A(getDeviceById()) --> B(validate ID)
+    B --> C(DAO.findById())
+    C --> D(map Entity to DTO)
+    D --> E(Return DTO)
+    C -- Not Found --> F(log and throw exception)
     F --> E
 ```
 
 ### Device Deletion Flow
 
 ```mermaid
-```mermaid
 flowchart LR
-    A[Delete Device] --> B[Validate ID]
-    B --> C[Call DAO delete]
-    C --> D[Log deletion]
-    D --> E[Return success]
-    C -- Error --> F[Log and throw exception]
+    A(Delete Device) --> B(Validate ID)
+    B --> C(Call DAO delete)
+    C --> D(Log deletion)
+    D --> E(Return success)
+    C -- Error --> F(Log and throw exception)
     F --> E
 ```
 ## 6. Error Handling & Transaction Management
