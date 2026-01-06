@@ -45,6 +45,26 @@ Build and verify a simple rule node that routes messages via `tellSuccess`, `tel
   - `Scheduling tellSelf after 5000ms`
   - `Failure during message processing by Rule Node [<nodeId>]`
 
+## Solution (Reference)
+
+Pseudo-logic for a minimal custom node:
+
+```java
+if (meta.getValue("route").orElse("").equals("success")) {
+   ctx.tellSuccess(msg);
+   return;
+}
+if (meta.getValue("route").orElse("").equals("retry")) {
+   ctx.tellSelf(msg, 5000);
+   return;
+}
+try {
+   ctx.tellNext(msg, "RETRY");
+} catch (Exception e) {
+   ctx.tellFailure(msg, e);
+}
+```
+
 ## References
 
 - [spec/tb-context-and-services.md](../spec/tb-context-and-services.md)

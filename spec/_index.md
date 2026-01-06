@@ -15,6 +15,8 @@ This index links detailed, developer-focused specs explaining core modules and f
 - [Rule Engine Queue & Actors](rule-engine-queue-and-actors.md)
 - [DAO & Entity Services Overview](dao-entity-services-overview.md)
 - [RuleNode UI Integration](rule-node-ui-integration.md)
+- [Actor Internals Deep Dive](actor-internals-deep-dive.md)
+- [Relations and Edge Sync](relations-and-edge-sync.md)
 
 ## Labs (Hands-on)
 

@@ -57,6 +57,14 @@ Trace a single message from producer → queue partition → consumer → App/Te
   - "Pushing message to single target: [RULE_NODE {nodeId}]"
   - "putToQueue -> new TbMsg id={uuid} ruleChainId={ruleChainId}"
 
+## Solution (Reference)
+
+Checklist you should be able to complete:
+
+- Identify the partition used when the message was enqueued
+- Find the correlationId across cloned messages for multi-partition cases
+- Show the actor that handled delivery (Tenant/RuleChain) and the decision path (pushToTarget vs putToQueue)
+
 ## References
 
 - [spec/rule-engine-queue-and-actors.md](../spec/rule-engine-queue-and-actors.md)

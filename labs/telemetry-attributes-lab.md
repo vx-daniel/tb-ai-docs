@@ -38,6 +38,28 @@ Save timeseries and attributes through a custom node using `RuleEngineTelemetryS
 - Timeseries query returns expected numeric values
 - Attributes query returns expected key-value pairs
 
+## Solution (Reference)
+
+Example payloads and expected persistence:
+
+```json
+{
+   "ts": 1736160000000,
+   "values": { "temp": 22.1, "humidity": 45 }
+}
+```
+
+Attributes saved in SERVER_SCOPE (example):
+
+```json
+{ "fwVersion": "1.2.3" }
+```
+
+Expected:
+
+- Latest timeseries for `temp` and `humidity` updated; raw timeseries present if strategy saves raw
+- Attribute `fwVersion` visible in SERVER_SCOPE
+
 ## References
 
 - [spec/timeseries-and-attributes-requests.md](../spec/timeseries-and-attributes-requests.md)
