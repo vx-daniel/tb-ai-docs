@@ -4,7 +4,7 @@ version: 1.0
 date_created: 2026-01-06
 last_updated: 2026-01-06
 owner: ThingsBoard Architecture Team
-tags: [architecture, blueprint, iot, java, angular, microservices, event-driven]
+tags: [architecture, blueprint, thingsboard, backend, frontend, integration]
 ---
 
 # Introduction
@@ -368,4 +368,281 @@ export class DeviceListComponent { ... }
 
 ---
 
+# 4. Backend Service Implementation (Expanded)
+
+Backend services are implemented as stateless Spring beans, following interface-driven design and strict separation of concerns. Each service method is atomic and transactional where required. Error handling, logging, and monitoring are integrated throughout the lifecycle. Visual flowcharts illustrate the main service operations.
+
+### 4.1 Service Operation Flowcharts
+
+#### 4.1.1 Device Creation Flow
+
+- **Controller Layer:** Receives HTTP POST request, validates input DTO, and delegates to service.
+- **Service Layer:**
+  - Validates business rules (e.g., unique device name, required fields).
+  - Maps DTO to entity using MapStruct or manual mapping.
+  - Calls DAO's save method within a `@Transactional` boundary.
+  - Handles exceptions (e.g., duplicate key, validation failure) and logs errors.
+  - Maps persisted entity back to DTO for response.
+- **DAO Layer:**
+  - Persists entity using JPA or custom SQL.
+  - Returns persisted entity or throws exception.
+- **Cache Layer:**
+  - Invalidates or updates device cache on successful save.
+- **Response:** Returns created device DTO or error to controller, which formats HTTP response.
+
+#### 4.1.2 Device Retrieval Flow
+
+- **Controller Layer:** Receives HTTP GET request with device ID, validates ID format, delegates to service.
+- **Service Layer:**
+  - Validates ID (UUID format, existence).
+  - Checks cache for device; if not found, queries DAO.
+  - Maps entity to DTO.
+  - Handles not found or access denied errors, logs as needed.
+- **DAO Layer:**
+  - Queries DB for device by ID.
+  - Returns entity or null/exception.
+- **Cache Layer:**
+  - Populates cache on successful retrieval.
+- **Response:** Returns device DTO or error to controller, which formats HTTP response.
+
+#### 4.1.3 Device Deletion Flow
+
+- **Controller Layer:** Receives HTTP DELETE request with device ID, validates ID, delegates to service.
+- **Service Layer:**
+  - Validates ID and business rules (e.g., device not in use).
+  - Calls DAO's delete method within a `@Transactional` boundary.
+  - Handles exceptions (e.g., foreign key constraint), logs errors.
+  - Invalidates device cache.
+- **DAO Layer:**
+  - Deletes entity by ID.
+  - Returns success or throws exception.
+- **Cache Layer:**
+  - Invalidates cache entry for device.
+- **Response:** Returns success or error to controller, which formats HTTP response.
+
+### 4.2 Error Handling & Transaction Management
+
+- All state-changing service methods are annotated with `@Transactional` to ensure atomicity and rollback on failure.
+- Exceptions from DAO are caught and mapped to service-level exceptions (e.g., `DeviceNotFoundException`, `DuplicateDeviceException`).
+- All errors are logged with context (operation, entity ID, user info).
+- Custom exception hierarchy is used for clear error propagation.
+- Transaction boundaries are defined at the service layer, not in controllers or DAOs.
+
+### 4.3 Logging & Monitoring
+
+- Use SLF4J for structured logging at all layers (controller, service, DAO).
+- Log all state transitions, errors, and important business events (e.g., device created, deleted).
+- Integrate with Prometheus/Grafana for metrics (e.g., request counts, error rates, latency).
+- Use unique request IDs to correlate logs across services.
+- Expose health and readiness endpoints for monitoring.
+
+### 4.4 Test Automation
+
+- **Unit Tests:**
+  - Use JUnit 5 and Mockito for service and DAO logic.
+  - Cover all business rules, error paths, and edge cases.
+- **Integration Tests:**
+  - Use Spring Test and Testcontainers for real DB and cache integration.
+  - Validate end-to-end flows (controller → service → DAO → DB/cache).
+- **Coverage:**
+  - Maintain 90%+ code coverage for service logic.
+  - Use mutation testing (e.g., PIT) to ensure test effectiveness.
+- **CI/CD:**
+  - Run all tests in GitHub Actions/Jenkins pipelines.
+  - Enforce coverage and quality gates (SonarQube).
+
+---
+
+# 28. Advanced Architectural Implementation & Flowcharts (Expanded)
+
+This section provides additional technical depth for implementing the core architectural components, including lifecycle, error handling, performance, observability, and visual flowcharts for key platform operations.
+
+### 28.1 Platform Data Flow Overview
+```mermaid
+flowchart TD
+    A[Device] --> B[Transport Module]
+    B --> C[Rule Engine]
+    C --> D[DAO]
+    D --> E[Database]
+    C --> F[External Integration]
+    F --> G[Third-Party Service]
+    D --> H[Cache]
+    H --> I[Service Layer]
+    I --> J[REST API]
+    J --> K[UI (Angular)]
+```
+
+### 28.2 Rule Engine Node Lifecycle Flowchart
+```mermaid
+flowchart TD
+    A[Node Instantiated] --> B[init(TbContext, TbNodeConfiguration)]
+    B --> C[Validate and parse configuration]
+    C --> D[Register with Node Registry]
+    D --> E[Ready to process messages]
+    E --> F[onMsg(TbContext, TbMsg)]
+    F --> G[Process message logic]
+    G --> H[ctx.tellSuccess or ctx.tellFailure]
+    H --> I[Node continues or terminates]
+    I --> J[destroy() on shutdown]
+```
+
+### 28.3 Data Access & Caching Flowchart
+```mermaid
+flowchart TD
+    A[Service: request entity] --> B[Check cache for entity]
+    B -->|Hit| C[Return entity from cache]
+    B -->|Miss| D[DAO: query database]
+    D --> E[Update cache with entity]
+    E --> F[Return entity to service]
+    D -->|Error| G[Log and handle DB error]
+    G --> F
+```
+
+### 28.4 Integration Service Flowchart
+```mermaid
+flowchart TD
+    A[External System: POST /api/external/sync] --> B[Controller: validate request]
+    B --> C[IntegrationService: map DTO]
+    C --> D[IntegrationService: call external API]
+    D --> E[IntegrationService: process response]
+    E --> F[IntegrationService: persist/update data]
+    F --> G[Return success to Controller]
+    D -->|Error| H[IntegrationService: log and handle error]
+    H --> G
+```
+
+### 28.5 In-Depth Technical Implementation
+
+- **Transport Module:**
+  - Implements protocol handlers for MQTT, HTTP, CoAP, LwM2M, SNMP.
+  - Uses Protobuf schemas for efficient message serialization.
+  - Manages device sessions and authentication.
+
+- **Rule Engine:**
+  - Modular node architecture; nodes implement `TbNode` and are registered via `@RuleNode`.
+  - Event-driven processing; nodes communicate via `TbContext` and `TbMsg`.
+  - Supports async flows and error handling; all messages must be acknowledged.
+
+- **DAO & Data Access:**
+  - Async DAOs using `CompletableFuture` or `ListenableFuture`.
+  - Implements cache-aside pattern with Caffeine/Guava for performance.
+  - All DB exceptions are mapped to domain-specific errors.
+
+- **Integration Service:**
+  - Exposes REST/gRPC endpoints for external systems.
+  - Uses DTOs for contracts; validates and sanitizes all inputs.
+  - Communicates with external APIs using WebClient/gRPC stubs.
+  - Supports async processing and error handling (retry, circuit breaker).
+
+- **UI (Angular):**
+  - Modular NgModules, RxJS for state and async flows.
+  - Service/component separation, DI via Angular.
+  - Communicates with backend via REST APIs; handles errors and state updates.
+
+- **Error Handling & Observability:**
+  - Centralized error handling in controllers/services/nodes.
+  - SLF4J/logback for backend logging; Angular logging for UI.
+  - Prometheus/Grafana for metrics; distributed tracing via OpenTelemetry.
+
+- **Security:**
+  - Spring Security for backend, JWT for UI.
+  - Secure credentials and secrets management.
+  - TLS for all external communication.
+
+- **Testing & CI/CD:**
+  - Unit, integration, and E2E tests for all modules.
+  - Automated pipelines in GitHub Actions/Jenkins; coverage and quality gates.
+
+---
+
+# 29. Advanced Module Interactions & Edge Cases
+
+### 29.1 Module Interaction Flowchart
+```mermaid
+flowchart TD
+    A[UI (Angular)] --> B[REST API]
+    B --> C[Service Layer]
+    C --> D[DAO]
+    D --> E[Database]
+    C --> F[Rule Engine]
+    F --> G[Node Registry]
+    F --> H[Integration Service]
+    H --> I[External System]
+    D --> J[Cache]
+    J --> C
+```
+
+### 29.2 Edge Case Handling
+- **Unacknowledged Rule Engine Message:**
+  - If a node fails to call `ctx.tellSuccess` or `ctx.tellFailure`, the rule chain is blocked.
+  - Mitigation: Enforce message acknowledgment in all node implementations; monitor for stuck chains.
+
+- **Stale Cache Data:**
+  - If cache invalidation is missed after entity update/delete, stale data may be served.
+  - Mitigation: Explicitly invalidate cache on all write operations; monitor cache hit/miss rates.
+
+- **Integration API Version Mismatch:**
+  - If an external system changes its API, integration may fail.
+  - Mitigation: Use adapter/anti-corruption layer; version all APIs; monitor integration errors.
+
+- **Database Connection Pool Exhaustion:**
+  - High load may exhaust DB connections, causing failures.
+  - Mitigation: Tune connection pool size; implement backpressure and retry logic.
+
+- **Circular Dependency Between Modules:**
+  - Circular dependencies can cause runtime errors and maintenance issues.
+  - Mitigation: Enforce module boundaries; use interfaces and dependency inversion.
+
+### 29.3 In-Depth Technical Implementation: Edge Case Examples
+
+- **Rule Engine Node Example:**
+```java
+public void onMsg(TbContext ctx, TbMsg msg) {
+    try {
+        // Process message
+        ctx.tellSuccess(msg);
+    } catch (Exception e) {
+        ctx.tellFailure(msg, new TbNodeException(e));
+    }
+}
+```
+
+- **Cache Invalidation Example:**
+```java
+public void updateDevice(Device device) {
+    deviceDao.saveAsync(device);
+    deviceCache.invalidate(device.getId());
+}
+```
+
+- **Integration Adapter Example:**
+```java
+public class ExternalApiAdapter {
+    public ApiResponse callExternal(ApiRequest req) {
+        try {
+            // Map request, call external API
+            // Handle response and errors
+        } catch (ExternalApiException e) {
+            // Log and map error
+        }
+    }
+}
+```
+
+- **Connection Pool Tuning Example:**
+```properties
+spring.datasource.hikari.maximum-pool-size=50
+spring.datasource.hikari.minimum-idle=10
+```
+
+- **Module Boundary Enforcement Example:**
+```java
+// Service depends on DAO interface, not implementation
+public class DeviceService {
+    private final DeviceDao deviceDao;
+    public DeviceService(DeviceDao deviceDao) { this.deviceDao = deviceDao; }
+}
+```
+
+---
 *Generated on 2026-01-06. Update this blueprint as the architecture evolves.*
