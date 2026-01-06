@@ -1,67 +1,132 @@
-# ThingsBoard Codebase Specs
+# ThingsBoard Specification Documentation
 
-This index links detailed, developer-focused specs explaining core modules and flows in the ThingsBoard codebase (server-side Java).
+Comprehensive technical specifications for the ThingsBoard IoT platform, organized by domain. These specifications are designed for developers, architects, and AI assistants working with the ThingsBoard codebase.
+
+---
+
+## Architecture & Design
+
+High-level architectural patterns, design principles, and system blueprints.
+
+- [Architecture Blueprint](architecture-blueprint.md) - System architecture, patterns, and design principles
+- [Backend Service Design](backend-service-design.md) - Service domains, responsibilities, and patterns
+- [Technology Stack](technology-stack.md) - Languages, frameworks, and infrastructure dependencies
+
+---
 
 ## Rule Engine
 
-- [Rule Engine Core Interfaces](rule-engine-core-interfaces.md)
-- [TbContext & Services](tb-context-and-services.md)
-- [Messaging Model (TbMsg & Metadata)](tbmsg-and-metadata.md)
-- [Rule Engine Queue & Actors](rule-engine-queue-and-actors.md)
-- [Rule Engine Services (RPC, Telemetry, Notifications)](rule-engine-services-rpc-telemetry-notifications.md)
-- [Rule Chain JSON Templates](rule-chain-json-templates.md)
-- [RuleNode UI Integration](rule-node-ui-integration.md)
-- [Script Engine API](script-engine.md)
+Core rule engine interfaces, messaging, and node implementation.
+
+- [Rule Engine Core](rule-engine-core.md) - TbNode, TbContext, TbMsg interfaces and lifecycle
+- [Rule Node Implementation Guide](rule-node-implementation-guide.md) - How to implement custom rule nodes
+- [Rule Node Inventory](rule-node-inventory.md) - Complete catalog of available rule nodes
+- [Rule Chain Templates](rule-chain-templates.md) - JSON templates and patterns for rule chains
+- [Script Engine](script-engine.md) - TBEL and JavaScript scripting APIs
+
+---
 
 ## Transport Layer
 
-- [Transport → Rule Engine Flow](transport-to-rule-engine-flow.md)
-- [MQTT Transport Flow](mqtt-transport-flow.md)
-- [HTTP Transport Flow](http-transport-flow.md)
-- [CoAP Transport Flow](coap-transport-flow.md)
+Device communication protocols and transport-to-rule-engine flow.
+
+- [Transport Overview](transport-overview.md) - Transport layer architecture and common patterns
+- [MQTT Transport](mqtt-transport.md) - MQTT protocol implementation and topics
+- [HTTP Transport](http-transport.md) - HTTP REST API for devices
+- [CoAP Transport](coap-transport.md) - CoAP protocol for constrained devices
+
+---
 
 ## Device & Asset Management
 
-- [Device RPC (Request/Response)](device-rpc.md)
-- [Device State Management](device-state-management.md)
-- [Device and Asset Profiles](device-asset-profiles.md)
-- [OTA Updates](ota-updates.md)
-- [Timeseries & Attributes Requests](timeseries-and-attributes-requests.md)
+Device lifecycle, profiles, RPC, and state management.
+
+- [Device & Asset Profiles](device-asset-profiles.md) - Profile configuration and provisioning
+- [Device RPC](device-rpc.md) - Server-side and client-side RPC implementation
+- [Device State Management](device-state-management.md) - Connectivity and activity tracking
+- [OTA Updates](ota-updates.md) - Firmware and software update mechanisms
+- [Timeseries & Attributes](timeseries-attributes.md) - Data storage and retrieval APIs
+
+---
 
 ## Data & Persistence
 
-- [DAO & Entity Services Overview](dao-entity-services-overview.md)
-- [Entity Query API](entity-query.md)
-- [Relations and Edge Sync](relations-and-edge-sync.md)
+Data access layer, entity services, and caching.
+
+- [DAO & Entity Services](dao-entity-services.md) - Data access patterns and entity management
+- [Entity Query API](entity-query.md) - Flexible entity querying and filtering
+- [Caching Strategies](caching-strategies.md) - Entity and profile caching
+
+---
 
 ## Notifications & Messaging
 
-- [Notification Service](notification-service.md)
-- [Mail Service](mail-service.md)
-- [SMS Service](sms-service.md)
-- [Alarm Service](alarm-service.md)
+Notification channels, templates, and delivery.
+
+- [Notification Service](notification-service.md) - Notification center and delivery channels
+- [Mail Service](mail-service.md) - Email sending and templates
+- [SMS Service](sms-service.md) - SMS providers and configuration
+- [Alarm Service](alarm-service.md) - Alarm creation, propagation, and querying
+
+---
 
 ## Security & Multi-Tenancy
 
-- [Security and Authentication](security-auth.md)
-- [Tenant and Customer Model](tenant-customer-model.md)
-- [API Usage State](api-usage-state.md)
-- [Audit Logging](audit-logging.md)
+Authentication, authorization, and tenant isolation.
+
+- [Security & Authentication](security-auth.md) - JWT, OAuth2, MFA, and device auth
+- [Tenant & Customer Model](tenant-customer-model.md) - Multi-tenancy and customer hierarchy
+- [API Usage & Rate Limiting](api-usage-state.md) - Usage tracking and rate limits
+- [Audit Logging](audit-logging.md) - Action tracking and compliance
+
+---
 
 ## UI & Real-Time
 
-- [Dashboard and Widgets](dashboard-widgets.md)
-- [WebSocket Subscriptions](websocket-subscriptions.md)
+Frontend patterns and real-time data delivery.
 
-## Infrastructure
+- [Angular UI Patterns](angular-ui-patterns.md) - Component, service, and state management patterns
+- [Dashboard & Widgets](dashboard-widgets.md) - Widget development and data binding
+- [WebSocket Subscriptions](websocket-subscriptions.md) - Real-time data subscriptions
 
-- [Actor Internals Deep Dive](actor-internals-deep-dive.md)
-- [Queue and Partitioning](queue-and-partitioning.md)
-- [Job Manager](job-manager.md)
-- [Edge Integration](edge-integration.md)
+---
 
-## Labs (Hands-on)
+## Infrastructure & Operations
 
-Looking for practical, step-by-step exercises? Start here:
+Actors, queues, monitoring, and deployment.
+
+- [Actor System](actor-system.md) - Akka actors, mailboxes, and processing
+- [Queue & Partitioning](queue-partitioning.md) - Message queues and partition strategies
+- [Job Manager](job-manager.md) - Scheduled and recurring jobs
+- [Edge Integration](edge-integration.md) - ThingsBoard Edge synchronization
+- [Monitoring & Observability](monitoring-observability.md) - Logging, metrics, and tracing
+
+---
+
+## Testing & Quality
+
+Testing strategies, CI/CD, and validation.
+
+- [Testing Strategy](testing-strategy.md) - Unit, integration, and E2E testing
+- [Error Handling](error-handling.md) - Exception patterns and transaction management
+- [Compliance & Auditing](compliance-auditing.md) - Regulatory requirements and audit trails
+
+---
+
+## Quick Reference
+
+| Category | Key Specs |
+|----------|-----------|
+| Getting Started | [Architecture Blueprint](architecture-blueprint.md), [Rule Engine Core](rule-engine-core.md) |
+| Building Nodes | [Rule Node Implementation Guide](rule-node-implementation-guide.md) |
+| Device Integration | [MQTT Transport](mqtt-transport.md), [Device RPC](device-rpc.md) |
+| Data Access | [DAO & Entity Services](dao-entity-services.md), [Entity Query API](entity-query.md) |
+| Security | [Security & Authentication](security-auth.md), [Tenant & Customer Model](tenant-customer-model.md) |
+
+---
+
+## Labs (Hands-on Exercises)
+
+For practical, step-by-step exercises, see:
 
 - [Labs Index](../labs/_index.md)

@@ -2,51 +2,46 @@
 
 ## Overview
 
-This document describes the security, authentication, and authorization model in ThingsBoard, including JWT tokens, access validation, and permission enforcement.
+This document describes the security, authentication, and authorization model in ThingsBoard, including JWT tokens, access validation, permission enforcement, OAuth2, and MFA.
 
 ---
 
-## Key Components
+## Authentication Architecture
 
-### Authentication
-
-- **JWT Tokens:** Used for REST API authentication
-- **Refresh Tokens:** Allow session renewal without re-login
-- **MFA:** Multi-factor authentication support
-- **OAuth2:** External identity provider integration
-- **Personal Access Tokens (PAT):** For API automation
-
-### Authorization
-
-- **Role-Based Access Control (RBAC):** Users assigned roles with specific permissions
-- **Tenant Isolation:** All entities scoped to a tenant
-- **Customer Isolation:** Customers see only their assigned devices/assets
-
----
-
-## Key Interfaces
-
-### AccessValidator
-
-Located at: `org/thingsboard/server/service/security/AccessValidator.java`
-
-| Method                | Description                                      |
-|-----------------------|--------------------------------------------------|
-| validate(...)         | Validate user access to an entity                |
-| validateEntityAndCallback(...) | Validate and invoke callback on result  |
-
-### TokenOutdatingService
-
-Located at: `org/thingsboard/server/service/security/auth/TokenOutdatingService.java`
-
-| Method                | Description                                      |
-|-----------------------|--------------------------------------------------|
-| isOutdated(token)     | Check if a token has been invalidated            |
-| outdateOldUserTokens(userId) | Invalidate all tokens for a user          |
+```mermaid
+flowchart TD
+  subgraph Clients
+    UI[Web UI]
+    API[API Client]
+    Device[Device]
+  end
+  subgraph Auth
+    JWT[JWT Auth]
+    OAuth[OAuth2]
+    MFA[MFA Service]
+    Device_Auth[Device Auth]
+  end
+  subgraph Core
+    AccessValidator
+    TokenFactory
+    CredentialsCache
+  end
+  UI --> JWT
+  UI --> OAuth
+  UI --> MFA
+  API --> JWT
+  Device --> Device_Auth
+  JWT --> TokenFactory
+  OAuth --> TokenFactory
+  Device_Auth --> CredentialsCache
+  TokenFactory --> AccessValidator
+```
 
 ---
 
-## Authentication Flow
+## User Authentication
+
+### JWT Token Flow
 
 ```mermaid
 sequenceDiagram
@@ -62,48 +57,37 @@ sequenceDiagram
   API-->>Client: 200 OK + tokens
 ```
 
----
+### Token Types
 
-## Permission Model
-
-| Role         | Permissions                                      |
-|--------------|--------------------------------------------------|
-| SYS_ADMIN    | Full system access                               |
-| TENANT_ADMIN | Full tenant access, manage users/devices/assets  |
-| CUSTOMER_USER| Access to assigned devices/assets only           |
-
----
-
-## JWT Token Structure
+| Token | Lifetime | Purpose |
+|-------|----------|---------|
+| Access Token | Short (15-30 min) | API authentication |
+| Refresh Token | Long (hours/days) | Obtain new access tokens |
 
 ### Access Token Claims
 
-| Claim       | Description                                      |
-|-------------|--------------------------------------------------|
-| sub         | User ID (UUID)                                   |
-| scopes      | List of authorities (e.g., TENANT_ADMIN)         |
-| userId      | User ID                                          |
-| firstName   | User first name                                  |
-| lastName    | User last name                                   |
-| enabled     | Account enabled flag                             |
-| tenantId    | Tenant ID                                        |
-| customerId  | Customer ID (if customer user)                   |
-| isPublic    | Public user flag                                 |
-| iat         | Issued at timestamp                              |
-| exp         | Expiration timestamp                             |
+| Claim | Description |
+|-------|-------------|
+| sub | User ID (UUID) |
+| scopes | Authorities (e.g., TENANT_ADMIN) |
+| userId | User ID |
+| firstName | User first name |
+| lastName | User last name |
+| enabled | Account enabled flag |
+| tenantId | Tenant ID |
+| customerId | Customer ID (if customer user) |
+| isPublic | Public user flag |
+| iat | Issued at timestamp |
+| exp | Expiration timestamp |
 
-### Token Lifecycle
+### Token Refresh
 
 ```mermaid
 sequenceDiagram
   participant Client
   participant API
   participant JWT as JwtTokenFactory
-  Client->>API: Login with credentials
-  API->>JWT: createTokenPair(user)
-  JWT-->>API: accessToken + refreshToken
-  API-->>Client: TokenPair
-  Note over Client: Access token expires (short-lived)
+  Note over Client: Access token expired
   Client->>API: POST /api/auth/token (refreshToken)
   API->>JWT: refreshTokens(refreshToken)
   JWT-->>API: new accessToken + refreshToken
@@ -112,39 +96,17 @@ sequenceDiagram
 
 ---
 
-## Device Authentication
+## Authorization
 
-### Credential Types
+### Role-Based Access Control
 
-| Type              | Description                                      |
-|-------------------|--------------------------------------------------|
-| ACCESS_TOKEN      | Simple token-based auth for HTTP/CoAP            |
-| X509_CERTIFICATE  | Certificate-based auth for MQTT/CoAP             |
-| MQTT_BASIC        | Username/password for MQTT                       |
-| LWM2M_CREDENTIALS | LwM2M-specific credentials                       |
+| Role | Permissions |
+|------|-------------|
+| SYS_ADMIN | Full system access |
+| TENANT_ADMIN | Full tenant access, manage users/devices/assets |
+| CUSTOMER_USER | Access to assigned devices/assets only |
 
-### Device Auth Flow (MQTT)
-
-```mermaid
-sequenceDiagram
-  participant Device
-  participant MQTT as MQTT Broker
-  participant Auth as DeviceAuthService
-  participant Cache as CredentialsCache
-  Device->>MQTT: CONNECT(username, password)
-  MQTT->>Auth: authenticate(credentials)
-  Auth->>Cache: lookup(credentialsId)
-  Cache-->>Auth: DeviceCredentials
-  Auth->>Auth: validate(credentials)
-  Auth-->>MQTT: DeviceInfo or UNAUTHORIZED
-  MQTT-->>Device: CONNACK
-```
-
----
-
-## Permission Enforcement
-
-### Entity-Level Permissions
+### Permission Operations
 
 ```java
 public enum Operation {
@@ -174,16 +136,64 @@ flowchart TD
 
 ---
 
+## Device Authentication
+
+### Credential Types
+
+| Type | Description |
+|------|-------------|
+| ACCESS_TOKEN | Simple token for HTTP/CoAP |
+| X509_CERTIFICATE | Certificate auth for MQTT/CoAP |
+| MQTT_BASIC | Username/password for MQTT |
+| LWM2M_CREDENTIALS | LwM2M-specific credentials |
+
+### Device Auth Flow
+
+```mermaid
+sequenceDiagram
+  participant Device
+  participant Transport as MQTT Broker
+  participant Auth as DeviceAuthService
+  participant Cache as CredentialsCache
+  Device->>Transport: CONNECT(username, password)
+  Transport->>Auth: authenticate(credentials)
+  Auth->>Cache: lookup(credentialsId)
+  Cache-->>Auth: DeviceCredentials
+  Auth->>Auth: validate(credentials)
+  Auth-->>Transport: DeviceInfo or UNAUTHORIZED
+  Transport-->>Device: CONNACK
+```
+
+---
+
+## Key Interfaces
+
+### AccessValidator
+
+| Method | Description |
+|--------|-------------|
+| validate(...) | Validate user access to an entity |
+| validateEntityAndCallback(...) | Validate and invoke callback on result |
+
+### TokenOutdatingService
+
+| Method | Description |
+|--------|-------------|
+| isOutdated(token) | Check if a token has been invalidated |
+| outdateOldUserTokens(userId) | Invalidate all tokens for a user |
+
+---
+
 ## OAuth2 Integration
 
 ### Supported Providers
 
-| Provider    | Configuration                                    |
-|-------------|--------------------------------------------------|
-| Google      | OAuth2 client credentials                        |
-| GitHub      | OAuth2 client credentials                        |
-| Facebook    | OAuth2 client credentials                        |
-| Custom      | OpenID Connect configuration                     |
+| Provider | Configuration |
+|----------|---------------|
+| Google | OAuth2 client credentials |
+| GitHub | OAuth2 client credentials |
+| Facebook | OAuth2 client credentials |
+| Custom | OpenID Connect configuration |
 
 ### OAuth2 Flow
 
@@ -209,12 +219,12 @@ sequenceDiagram
 
 ### Supported Methods
 
-| Method      | Description                                      |
-|-------------|--------------------------------------------------|
-| TOTP        | Time-based one-time password (Google Auth, etc.) |
-| SMS         | SMS-based verification code                      |
-| EMAIL       | Email-based verification code                    |
-| BACKUP_CODE | Pre-generated backup codes                       |
+| Method | Description |
+|--------|-------------|
+| TOTP | Time-based one-time password (Google Auth) |
+| SMS | SMS-based verification code |
+| EMAIL | Email-based verification code |
+| BACKUP_CODE | Pre-generated backup codes |
 
 ### MFA Flow
 
@@ -236,39 +246,68 @@ sequenceDiagram
 
 ## Rate Limiting
 
-### Configurable Limits
-
-| Limit Type                | Description                                      |
-|---------------------------|--------------------------------------------------|
-| login.attempts            | Max failed login attempts before lockout         |
-| login.lockout.duration    | Account lockout duration (seconds)               |
-| api.rate.limit            | Max API requests per time window                 |
-| ws.rate.limit             | WebSocket message rate limit                     |
+| Limit Type | Description |
+|------------|-------------|
+| login.attempts | Max failed login attempts before lockout |
+| login.lockout.duration | Account lockout duration (seconds) |
+| api.rate.limit | Max API requests per time window |
+| ws.rate.limit | WebSocket message rate limit |
 
 ---
 
 ## Security Headers
 
-| Header                    | Value                                            |
-|---------------------------|--------------------------------------------------|
-| X-Content-Type-Options    | nosniff                                          |
-| X-Frame-Options           | DENY                                             |
-| X-XSS-Protection          | 1; mode=block                                    |
-| Content-Security-Policy   | Configurable CSP policy                          |
-| Strict-Transport-Security | max-age=31536000; includeSubDomains              |
+| Header | Value |
+|--------|-------|
+| X-Content-Type-Options | nosniff |
+| X-Frame-Options | DENY |
+| X-XSS-Protection | 1; mode=block |
+| Content-Security-Policy | Configurable CSP policy |
+| Strict-Transport-Security | max-age=31536000; includeSubDomains |
+
+---
+
+## Personal Access Tokens (PAT)
+
+### Use Cases
+
+- API automation without user credentials
+- CI/CD pipeline integrations
+- Third-party system access
+
+### PAT Management
+
+| Operation | Endpoint |
+|-----------|----------|
+| Create PAT | POST /api/user/personal-access-token |
+| List PATs | GET /api/user/personal-access-tokens |
+| Revoke PAT | DELETE /api/user/personal-access-token/{id} |
 
 ---
 
 ## Best Practices
 
+### Do's
+
 - Use short-lived access tokens with refresh
 - Enforce MFA for admin accounts
 - Scope API integrations with PATs
 - Audit access and permission changes
+- Use X.509 certificates for production devices
+- Configure rate limiting for public endpoints
+
+### Don'ts
+
+- Don't store tokens in localStorage (use httpOnly cookies)
+- Don't disable HTTPS in production
+- Don't use shared device credentials
+- Don't skip permission validation in custom code
+- Don't expose admin endpoints publicly
 
 ---
 
 ## See Also
 
-- [TbContext & Services](tb-context-and-services.md)
-- [DAO & Entity Services Overview](dao-entity-services-overview.md)
+- [Transport Layer](transport-layer.md)
+- [Device & Asset Management](device-asset-management.md)
+- [Architecture Blueprint](architecture-blueprint.md)
