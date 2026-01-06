@@ -91,12 +91,18 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A(getDeviceById()) --> B(validate ID)
-    B --> C(DAO.findById())
-    C --> D(map Entity to DTO)
-    D --> E(Return DTO)
-    C -- Not Found --> F(log and throw exception)
-    F --> E
+    b1 --> b2
+    b2 --> b3
+    b3 --> b4
+    b4 --> b5
+    b3 -- Not Found --> b6
+    b6 --> b5
+    b1[getDeviceById]
+    b2[validate ID]
+    b3[DAO.findById]
+    b4[map Entity to DTO]
+    b5[Return DTO]
+    b6[log and throw exception]
 ```
 
 ### Device Deletion Flow
