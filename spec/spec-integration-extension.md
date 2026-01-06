@@ -289,6 +289,7 @@ flowchart TD
   - Profile integration flows for latency and throughput.
   - Expose integration metrics (request count, error count, avg latency) via monitoring endpoints.
   - Use structured logging and distributed tracing for all integration operations.
+  - Set up alerting for integration failures, high latency, or error spikes.
 
 - **Example: Plugin Registration and REST Integration**
 ```java
@@ -309,4 +310,124 @@ public class MyPlugin implements ThingsBoardPlugin {
 }
 ```
 
----
+## 19. Advanced Integration Edge Cases & Technical Examples
+
+### 19.1 Integration Error Handling Flowchart
+```mermaid
+flowchart TD
+    A[IntegrationService: call external API] --> B[Receive response]
+    B -->|Success| C[Process and persist data]
+    B -->|Error| D[Log error]
+    D --> E[Retry or escalate]
+    E --> F[Return error to caller]
+```
+
+### 19.2 Plugin Lifecycle Flowchart
+```mermaid
+flowchart TD
+    A[Plugin Registered] --> B[Validate config]
+    B --> C[Initialize plugin]
+    C --> D[Monitor health]
+    D --> E[Handle events]
+    E --> F[Plugin removed]
+    F --> G[Cleanup resources]
+```
+
+### 19.3 In-Depth Technical Implementation: Edge Case Examples
+
+- **API Version Mismatch Handling:**
+```java
+public class ExternalApiAdapter {
+    public ApiResponse callExternal(ApiRequest req) {
+        try {
+            // Map request, call external API
+            // Handle response and errors
+        } catch (ExternalApiException e) {
+            // Log and map error
+            if (e.isVersionMismatch()) {
+                // Fallback or notify for API update
+            }
+        }
+    }
+}
+```
+
+- **Plugin Health Monitoring Example:**
+```java
+@Component
+public class PluginHealthMonitor {
+    public void monitor(ThingsBoardPlugin plugin) {
+        // Periodically check plugin status
+        // Log and alert on failures
+    }
+}
+```
+
+- **Retry Logic for Transient Integration Errors:**
+```java
+public ResponseEntity<?> sync(SyncRequest req) {
+    int attempts = 0;
+    while (attempts < MAX_RETRIES) {
+        try {
+            // Call external API
+            return ResponseEntity.ok(...);
+        } catch (TransientException e) {
+            attempts++;
+            // Log and retry
+        }
+    }
+    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Integration failed");
+}
+```
+
+- **Secure Plugin Configuration Example:**
+```java
+@Component
+public class SecurePluginConfig {
+    @Value("${plugin.secret}")
+    private String secret;
+    // Use secret securely in plugin logic
+}
+```
+
+## 20. Integration Performance, Observability & Security
+
+### 20.1 Performance Optimization
+- Profile integration flows for latency and throughput using APM tools (e.g., New Relic, Prometheus).
+- Use async processing (CompletableFuture, Reactor) for non-blocking external calls.
+- Tune connection pools and thread pools for high concurrency.
+- Batch requests to external systems where possible to reduce overhead.
+
+### 20.2 Observability & Monitoring
+- Expose integration metrics (request count, error count, avg latency) via Prometheus endpoints.
+- Use structured logging for all integration operations; include correlation IDs for traceability.
+- Implement distributed tracing (OpenTelemetry) to follow requests across services and plugins.
+- Set up alerting for integration failures, high latency, or error spikes.
+
+### 20.3 Security Best Practices
+- Enforce authentication and authorization for all integration endpoints (Spring Security, OAuth2/JWT).
+- Secure all secrets and credentials using a secrets manager or encrypted configuration.
+- Validate and sanitize all data exchanged with external systems to prevent injection attacks.
+- Use TLS for all external communication; verify certificates and endpoint authenticity.
+- Regularly audit integration code and dependencies for vulnerabilities.
+
+## 21. Integration Testing & CI/CD
+
+### 21.1 Integration Testing Strategy
+- Use unit tests (JUnit, Mockito) for all plugin and integration logic.
+- Employ integration tests with simulated external systems (Testcontainers, WireMock, MockServer).
+- Implement contract tests to verify API compatibility with external systems and plugins.
+- Test error handling, retries, and fallback logic for all integration points.
+- Automate regression tests for all supported plugin versions and integration scenarios.
+
+### 21.2 CI/CD Pipeline Integration
+- Run all integration and contract tests in CI pipelines (GitHub Actions, Jenkins).
+- Enforce code quality gates (SonarQube, Checkstyle) and minimum coverage thresholds.
+- Automate deployment of plugins and integration modules to test environments.
+- Use canary releases and feature flags for safe rollout of new integrations.
+- Monitor deployments for integration failures and roll back on critical errors.
+
+### 21.3 Test Data Management
+- Use synthetic and anonymized data for integration tests.
+- Clean up test data after each test run to ensure isolation.
+- Version test data schemas alongside integration code.
