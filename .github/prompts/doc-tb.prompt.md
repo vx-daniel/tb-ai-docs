@@ -1,7 +1,8 @@
 ---
 description: Document Thingsboard
 ---
-I would like you to explain the code located in `thingsboard` in a clear, detailed, and step-by-step manner, making it easy for someone with intermediate programming skills to understand. Please use OpenSpec to generate spec files of your findings in the `spec` folder.
+
+I would like you to explain the code located in `thingsboard` in a clear, detailed, and step-by-step manner, making it easy for someone with intermediate programming skills to understand. Please use OpenSpec to generate spec files of your findings.
 
 When explaining, please:
 
