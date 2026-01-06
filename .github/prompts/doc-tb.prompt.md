@@ -2,7 +2,7 @@
 description: Document Thingsboard
 ---
 
-I would like you to explain the code located in `thingsboard` in a clear, detailed, and step-by-step manner, making it easy for someone with intermediate programming skills to understand. Please use OpenSpec to generate spec files of your findings.
+I would like you to explain the code located in `thingsboard` in a clear, detailed, and step-by-step manner, making it easy for someone with intermediate programming skills to understand. Please save documentation in multiple detailed spec files in the `spec` folder. Each spec file should focus on a specific module or component of the Thingsboard codebase, providing a comprehensive overview and actionable insights for developers working with that part of the code. Use mermaid diagrams for Github where applicable to illustrate complex relationships or workflows.
 
 When explaining, please:
 
