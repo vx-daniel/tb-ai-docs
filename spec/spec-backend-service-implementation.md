@@ -70,40 +70,40 @@ public class DeviceServiceImpl implements DeviceService {
 ### Device Creation Flow
 
 ```mermaid
-flowchart TD
-    A[Controller: createDevice()] --> B[Service: validate input]
-    B --> C[Service: map DTO to Entity]
-    C --> D[Service: call DAO.save()]
-    D --> E[Service: map Entity to DTO]
-    E --> F[Return DTO to Controller]
-    D -->|Error| G[Service: log and throw exception]
+flowchart LR
+    A[createDevice()] --> B[validate input]
+    B --> C[map DTO to Entity]
+    C --> D[DAO.save()]
+    D --> E[map Entity to DTO]
+    E --> F[Return DTO]
+    D -- Error --> G[log and throw exception]
     G --> F
 ```
 
 ### Device Retrieval Flow
 
 ```mermaid
-flowchart TD
-    A[Controller: getDeviceById()] --> B[Service: validate ID]
-    B --> C[Service: call DAO.findById()]
-    C --> D[Service: map Entity to DTO]
-    D --> E[Return DTO to Controller]
-    C -->|Not Found| F[Service: log and throw exception]
+flowchart LR
+    A[getDeviceById()] --> B[validate ID]
+    B --> C[DAO.findById()]
+    C --> D[map Entity to DTO]
+    D --> E[Return DTO]
+    C -- Not Found --> F[log and throw exception]
     F --> E
 ```
 
 ### Device Deletion Flow
 
 ```mermaid
-flowchart TD
-    A[Controller: deleteDevice()] --> B[Service: validate ID]
-    B --> C[Service: call DAO.delete()]
-    C --> D[Service: log deletion]
-    D --> E[Return success to Controller]
-    C -->|Error| F[Service: log and throw exception]
+```mermaid
+flowchart LR
+    A[Delete Device] --> B[Validate ID]
+    B --> C[Call DAO delete]
+    C --> D[Log deletion]
+    D --> E[Return success]
+    C -- Error --> F[Log and throw exception]
     F --> E
 ```
-
 ## 6. Error Handling & Transaction Management
 
 - Use `@Transactional` for all methods that modify persistent state
@@ -201,12 +201,12 @@ public void deleteDevice(UUID id) { ... }
 
 ### Duplicate Device Creation
 ```mermaid
-flowchart TD
-    A[Service: createDevice()] --> B[Check if device name exists]
-    B -->|Exists| C[Log warning]
-    C --> D[Throw DuplicateDeviceException]
-    B -->|Not Exists| E[Proceed with creation]
-    E --> F[Return DTO]
+flowchart LR
+    A[Create Device] --> B[Check if name exists]
+    B -- Exists --> C[Log warning]
+    C --> D[Throw Duplicate Exception]
+    B -- Not Exists --> E[Proceed with creation]
+    E --> F[Return result]
 ```
 
 ### Bulk Device Deletion
