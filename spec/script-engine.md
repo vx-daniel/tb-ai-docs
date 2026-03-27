@@ -1,8 +1,8 @@
-# Script Engine API Specification
+# Script Engine Specification
 
 ## Overview
 
-This document describes the scripting APIs available in ThingsBoard for rule node logic. Scripts are used for message transformation, filtering, switching, and custom logic within rule chains.
+This document describes the scripting APIs available in ThingsBoard for rule node logic, including JavaScript and TBEL (ThingsBoard Expression Language).
 
 ---
 
@@ -10,21 +10,19 @@ This document describes the scripting APIs available in ThingsBoard for rule nod
 
 ### ScriptEngine
 
-Located at: `org/thingsboard/rule/engine/api/ScriptEngine.java`
-
-| Method                        | Return Type                   | Description                               |
-|-------------------------------|-------------------------------|-------------------------------------------|
-| executeUpdateAsync(TbMsg)     | ListenableFuture<List<TbMsg>> | Transform and return updated messages     |
-| executeGenerateAsync(TbMsg)   | ListenableFuture<TbMsg>       | Generate a new message from the input     |
-| executeFilterAsync(TbMsg)     | ListenableFuture<Boolean>     | Filter: return true to pass, false to drop|}
-| executeSwitchAsync(TbMsg)     | ListenableFuture<Set<String>> | Return set of relation labels for routing |
-| executeJsonAsync(TbMsg)       | ListenableFuture<JsonNode>    | Return arbitrary JSON result              |
-| executeToStringAsync(TbMsg)   | ListenableFuture<String>      | Return string result                      |
-| destroy()                     | void                          | Clean up resources                        |
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| executeUpdateAsync(TbMsg) | ListenableFuture<List<TbMsg>> | Transform and return updated messages |
+| executeGenerateAsync(TbMsg) | ListenableFuture<TbMsg> | Generate a new message |
+| executeFilterAsync(TbMsg) | ListenableFuture<Boolean> | Filter: return true to pass |
+| executeSwitchAsync(TbMsg) | ListenableFuture<Set<String>> | Return relation labels for routing |
+| executeJsonAsync(TbMsg) | ListenableFuture<JsonNode> | Return arbitrary JSON |
+| executeToStringAsync(TbMsg) | ListenableFuture<String> | Return string result |
+| destroy() | void | Clean up resources |
 
 ### ScriptInvokeService
 
-Responsible for invoking scripts in a sandboxed, managed environment.
+Responsible for invoking scripts in a sandboxed environment:
 
 - Tracks script execution statistics
 - Handles blocked script detection
@@ -41,12 +39,14 @@ Creates script engines for rule nodes, supporting:
 
 ## Script Types
 
-- **Filter:** Returns boolean; used to allow/deny message flow
-- **Transform:** Returns TbMsg or list; modifies message
-- **Switch:** Returns set of relation labels for routing
-- **Generate:** Creates a new message
-- **ToJson:** Returns JsonNode
-- **ToString:** Returns string
+| Type | Return | Purpose |
+|------|--------|---------|
+| Filter | Boolean | Allow/deny message flow |
+| Transform | TbMsg or List | Modify message |
+| Switch | Set<String> | Route to relation labels |
+| Generate | TbMsg | Create new message |
+| ToJson | JsonNode | Return JSON result |
+| ToString | String | Return string result |
 
 ---
 
@@ -65,10 +65,21 @@ sequenceDiagram
 
 ---
 
-## Error Handling
+## Script Context Variables
 
-- `TbScriptException`: Thrown when script execution fails
-- `BlockedScriptInfo`: Tracks scripts that have exceeded error thresholds
+### Available in All Scripts
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| msg | Object | Parsed message payload (JSON) |
+| metadata | Object | Message metadata key-value map |
+| msgType | String | Message type (e.g., POST_TELEMETRY_REQUEST) |
+
+### Additional Variables
+
+| Script Type | Additional Variables |
+|-------------|---------------------|
+| Generate | prevMsg (previous message payload) |
 
 ---
 
@@ -78,77 +89,69 @@ TBEL is a high-performance expression language optimized for IoT data processing
 
 ### Key Features
 
-| Feature           | Description                                      |
-|-------------------|--------------------------------------------------|
-| JSON Native       | Direct JSON object/array manipulation            |
-| Math Functions    | Built-in math operations                         |
-| String Operations | Comprehensive string manipulation                |
-| Date/Time         | Date parsing and formatting                      |
-| Type Coercion     | Automatic type conversion                        |
-| Null Safety       | Safe navigation operators                        |
+| Feature | Description |
+|---------|-------------|
+| JSON Native | Direct JSON object/array manipulation |
+| Math Functions | Built-in math operations |
+| String Operations | Comprehensive string manipulation |
+| Date/Time | Date parsing and formatting |
+| Type Coercion | Automatic type conversion |
+| Null Safety | Safe navigation operators |
 
-### Built-in Functions
+### TBEL vs JavaScript
+
+| Aspect | TBEL | JavaScript |
+|--------|------|------------|
+| Execution Speed | ~10x faster | Standard |
+| Memory Usage | Lower | Higher |
+| Sandboxing | Built-in | Requires isolation |
+| Syntax | Expression-focused | Full language |
+| Use Case | Simple transforms | Complex logic |
+
+---
+
+## Built-in Functions
+
+### Math Functions
 
 ```javascript
-// Math
 Math.abs(x), Math.ceil(x), Math.floor(x), Math.round(x)
 Math.min(a, b), Math.max(a, b), Math.pow(base, exp)
 Math.sqrt(x), Math.log(x), Math.random()
+```
 
-// String
+### String Functions
+
+```javascript
 str.length(), str.substring(start, end)
 str.indexOf(substr), str.replace(old, new)
 str.split(delimiter), str.trim()
 str.toUpperCase(), str.toLowerCase()
 str.startsWith(prefix), str.endsWith(suffix)
+```
 
-// JSON
+### JSON Functions
+
+```javascript
 JSON.stringify(obj), JSON.parse(str)
 obj.keys(), obj.values(), obj.entries()
+```
 
-// Date
+### Date Functions
+
+```javascript
 new Date(), Date.now()
 date.getTime(), date.toISOString()
 dateFormat(date, pattern)
+```
 
-// Base64
+### Binary Functions
+
+```javascript
 btoa(str), atob(encoded)
-
-// Binary
 bytesToString(bytes, encoding)
 stringToBytes(str, encoding)
 ```
-
-### TBEL vs JavaScript Comparison
-
-| Aspect            | TBEL                        | JavaScript                   |
-|-------------------|-----------------------------|------------------------------|
-| Execution Speed   | ~10x faster                 | Standard V8/Nashorn          |
-| Memory Usage      | Lower                       | Higher                       |
-| Sandboxing        | Built-in                    | Requires isolation           |
-| Syntax            | Expression-focused          | Full language                |
-| Use Case          | Simple transforms           | Complex logic                |
-
----
-
-## Script Context Variables
-
-### Available in All Scripts
-
-| Variable    | Type        | Description                                      |
-|-------------|-------------|--------------------------------------------------|
-| msg         | Object      | Parsed message payload (JSON)                    |
-| metadata    | Object      | Message metadata key-value map                   |
-| msgType     | String      | Message type (e.g., POST_TELEMETRY_REQUEST)      |
-
-### Additional Variables by Script Type
-
-| Script Type | Additional Variables                             |
-|-------------|--------------------------------------------------|
-| Filter      | None                                             |
-| Transform   | None                                             |
-| Switch      | None                                             |
-| Generate    | prevMsg (previous message payload)               |
 
 ---
 
@@ -201,89 +204,159 @@ var newMsg = {
 return { msg: newMsg, metadata: metadata, msgType: 'ALARM' };
 ```
 
----
+### Complex Transform (JavaScript)
 
-## Remote JavaScript Executor
+```javascript
+// Aggregate multiple sensors
+var sensors = msg.sensors || [];
+var avg = 0;
+if (sensors.length > 0) {
+  var sum = sensors.reduce(function(a, b) { return a + b; }, 0);
+  avg = sum / sensors.length;
+}
 
-For JavaScript execution, ThingsBoard uses a remote executor for isolation and scalability.
+var result = {
+  averageTemperature: avg,
+  sensorCount: sensors.length,
+  timestamp: Date.now()
+};
 
-### Architecture
-
-```mermaid
-flowchart TD
-  RE[Rule Engine] --> Queue[Script Queue]
-  Queue --> Executor1[JS Executor 1]
-  Queue --> Executor2[JS Executor 2]
-  Queue --> ExecutorN[JS Executor N]
-  Executor1 --> V8[V8 Engine]
-  Executor2 --> V8
-  ExecutorN --> V8
-```
-
-### Configuration
-
-| Property                           | Description                          |
-|------------------------------------|--------------------------------------|
-| js.evaluator                       | local or remote                      |
-| js.remote.max_pending_requests     | Max queued script requests           |
-| js.remote.max_requests_timeout     | Request timeout (ms)                 |
-| js.remote.stats.enabled            | Enable execution statistics          |
-
----
-
-## Script Blocking and Recovery
-
-### Blocking Detection
-
-Scripts are automatically blocked when they:
-
-- Exceed execution time limits
-- Throw repeated errors
-- Consume excessive memory
-
-### Blocked Script Info
-
-| Field              | Description                                      |
-|--------------------|--------------------------------------------------|
-| scriptId           | Unique script identifier                         |
-| blockedReason      | Reason for blocking                              |
-| blockedSince       | Timestamp when blocked                           |
-| errorCount         | Number of errors before blocking                 |
-| lastError          | Last error message                               |
-
-### Recovery
-
-```mermaid
-stateDiagram-v2
-  [*] --> Active: deploy
-  Active --> Blocked: errors exceed threshold
-  Blocked --> Active: manual reset or timeout
-  Active --> [*]: delete
+return { msg: result, metadata: metadata, msgType: msgType };
 ```
 
 ---
 
-## Performance Tuning
+## Metadata Manipulation
 
-| Setting                  | Recommendation                                   |
-|--------------------------|--------------------------------------------------|
-| Script Timeout           | 3000ms for transform, 1000ms for filter          |
-| Max Pending Requests     | 10000 for high-throughput systems                |
-| TBEL vs JS               | Use TBEL for simple operations (10x faster)      |
-| Script Caching           | Scripts are cached; avoid dynamic script changes |
+### Reading Metadata
+
+```javascript
+var deviceName = metadata['deviceName'];
+var deviceType = metadata['deviceType'];
+var timestamp = metadata['ts'];
+```
+
+### Modifying Metadata
+
+```javascript
+// In transform script
+metadata['processed'] = 'true';
+metadata['processingTime'] = String(Date.now());
+return { msg: msg, metadata: metadata, msgType: msgType };
+```
+
+---
+
+## Error Handling
+
+### Exception Types
+
+| Exception | Description |
+|-----------|-------------|
+| TbScriptException | Script execution failed |
+| BlockedScriptInfo | Script exceeded error thresholds |
+
+### Script Blocking
+
+Scripts that repeatedly fail are blocked to prevent system degradation:
+
+| Configuration | Description |
+|---------------|-------------|
+| script.execution.max_errors | Max errors before blocking |
+| script.execution.block_duration | Block duration in seconds |
+
+---
+
+## Performance Considerations
+
+### Do's
+
+- Use TBEL for simple transformations
+- Keep scripts focused and minimal
+- Use built-in functions over custom logic
+- Pre-compute values when possible
+- Return early when filtering
+
+### Don'ts
+
+- Don't use infinite loops
+- Don't make external calls from scripts
+- Don't allocate large objects
+- Don't store state between executions
+- Don't use complex regular expressions
+
+---
+
+## Script Configuration
+
+### Remote JS Executor
+
+```yaml
+js:
+  evaluator: remote
+  remote:
+    host: localhost
+    port: 8080
+    max_pending_requests: 10000
+    max_eval_requests_per_second: 200
+```
+
+### TBEL Configuration
+
+```yaml
+tbel:
+  enabled: true
+  max_script_body_size: 100000
+  max_memory_limit_mb: 8
+  max_errors: 3
+```
+
+---
+
+## Testing Scripts
+
+### Unit Testing Pattern
+
+```java
+@Test
+void testFilterScript() throws Exception {
+    String script = "return msg.temperature > 25;";
+    ScriptEngine engine = factory.createEngine(ScriptType.FILTER, script);
+    
+    TbMsg msg = createMessage("{\"temperature\": 30}");
+    Boolean result = engine.executeFilterAsync(msg).get();
+    
+    assertTrue(result);
+}
+```
+
+### Debug Logging
+
+```javascript
+// Log values for debugging (visible in rule engine logs)
+var debug = {
+  input: msg,
+  metadata: metadata,
+  calculated: someValue
+};
+// Use only during development
+```
 
 ---
 
 ## Best Practices
 
-- Keep scripts short and focused
-- Avoid blocking operations in scripts
-- Use TBEL for performance-critical transformations
-- Test scripts thoroughly before deployment
+| Practice | Recommendation |
+|----------|----------------|
+| Language Choice | TBEL for simple, JS for complex |
+| Error Handling | Validate inputs, handle nulls |
+| Performance | Minimize object creation |
+| Testing | Test scripts in isolation |
+| Debugging | Use script test feature in UI |
 
 ---
 
 ## See Also
 
-- [TbContext & Services](tb-context-and-services.md)
-- [Rule Engine Core Interfaces](rule-engine-core-interfaces.md)
+- [Rule Engine Core](rule-engine-core.md)
+- [Rule Node Implementation Guide](rule-node-implementation-guide.md)
